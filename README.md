@@ -22,6 +22,10 @@ Create a virtual environment with Pipenv
 
 Pipenv will enter the virtualenv and install dependencies from Pipfile (created from requirements.txt)
 
+3. Install dependencies (in pipenv virtualenv)
+`> pipenv install --skip-lock`
+(lock takes too long)
+
 ## How to play
 
 open 3 terminals:
