@@ -9,6 +9,19 @@ Make sure you are running Python 3.7.
 
 *Tip: you might want to create a virtualenv first*
 
+** OR **
+
+Create a virtual environment with Pipenv
+
+( 
+1. Install pipenv
+`$ pip install pipenv`
+)
+2. Create virtual environment with pipenv
+`$ pipenv shell`
+
+Pipenv will enter the virtualenv and install dependencies from Pipfile (created from requirements.txt)
+
 ## How to play
 
 open 3 terminals:
