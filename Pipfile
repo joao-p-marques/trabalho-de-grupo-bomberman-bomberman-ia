@@ -7,7 +7,7 @@ verify_ssl = true
 
 [packages]
 requests = "*"
-pygame = "*"
+pygame = "2.*"
 aiohttp = "*"
 websockets = "*"
 yarl = "*"

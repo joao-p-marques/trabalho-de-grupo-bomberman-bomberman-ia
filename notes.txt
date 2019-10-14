@@ -1,0 +1,11 @@
+
+1. Encontrar parede destrutível mais perto
+2. Encontrar pontos ao lado da parede onde posso colocar bomba para destruir
+    X
+  X P X
+    X
+3. Encontrar o ponto mais perto dos anteriores (distancia ponto a ponto)
+4. Calcular caminho mais perto para chegar lá.
+5. Encontrar sítio para abrigar ao lado.
+6. Calcular caminho para abrigo.
+
