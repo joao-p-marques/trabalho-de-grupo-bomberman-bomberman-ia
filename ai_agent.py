@@ -1,3 +1,4 @@
+
 import sys
 import json
 import asyncio
@@ -12,8 +13,7 @@ import pygame
 
 pygame.init()
 
-
-async def agent_loop(server_address="localhost:8000", agent_name="student"):
+async def agent_loop(server_address="localhost:8000", agent_name="ai_agent"):
     async with websockets.connect(f"ws://{server_address}/player") as websocket:
 
         # Receive information about static game properties
