@@ -6,7 +6,7 @@ import os
 
 import requests
 
-from characters import Balloom, Bomberman, Character, Doll, Minvo, Oneal
+from characters import Balloom, Bomberman, Character, Doll, Minvo, Oneal, Kondoria, Ovapi, Pass
 from consts import Powerups
 from mapa import Map, Tiles
 
@@ -26,6 +26,16 @@ LEVEL_ENEMIES = {
     3: [Balloom] * 2 + [Oneal] * 2 + [Doll] * 2,
     4: [Balloom] + [Oneal] + [Doll] * 2 + [Minvo] * 2,
     5: [Oneal] * 4 + [Doll] * 3,
+    6: [Oneal] * 2 + [Doll] * 3 + [Minvo] * 2,
+    7: [Oneal] * 2 + [Doll] * 3 + [Kondoria] * 2,
+    8: [Oneal] * 1 + [Doll] * 2 + [Minvo] * 4,
+    9: [Oneal] * 1 + [Doll] * 1 + [Minvo] * 4 + [Kondoria] * 1,
+    10: [Oneal] * 1 + [Doll] * 1 + [Minvo] * 1 + [Kondoria] * 3 + [Ovapi] * 1,
+    11: [Oneal] * 1 + [Doll] * 2 + [Minvo] * 3 + [Kondoria] * 1 + [Ovapi] * 1,
+    12: [Oneal] * 1 + [Doll] * 1 + [Minvo] * 1 + [Kondoria] * 4 + [Ovapi] * 1,
+    13: [Doll] * 3 + [Minvo] * 3 + [Kondoria] * 3,
+    14: [Ovapi] * 7 + [Pass] * 1,
+    15: [Doll] * 1 + [Minvo] * 3 + [Kondoria] * 3 + [Pass] * 1,
 }
 
 LEVEL_POWERUPS = {
@@ -34,6 +44,16 @@ LEVEL_POWERUPS = {
     3: Powerups.Detonator,
     4: Powerups.Speed,
     5: Powerups.Bombs,
+    6: Powerups.Bombs,
+    7: Powerups.Flames,
+    8: Powerups.Detonator,
+    9: Powerups.Bombpass,
+    10: Powerups.Wallpass,
+    11: Powerups.Bombs,
+    12: Powerups.Bombs,
+    13: Powerups.Detonator,
+    14: Powerups.Bombpass,
+    15: Powerups.Flames,
 }
 
 
@@ -155,6 +175,7 @@ class Game:
 
         logger.info("NEXT LEVEL")
         self.map = Map(level=level, size=self.map.size, enemies=len(LEVEL_ENEMIES[level]))
+        self._bomberman.respawn()
         self._step = 0
         self._bombs = []
         self._powerups = []
@@ -195,9 +216,9 @@ class Game:
             else:
                 # Update position
                 new_pos = self.map.calc_pos(
-                    self._bomberman.pos, self._lastkeypress
+                    self._bomberman.pos, self._lastkeypress, self._bomberman.wallpass
                 )  # don't bump into stones/walls
-                if new_pos not in [b.pos for b in self._bombs]:  # don't pass over bombs
+                if self._bomberman.bombpass or new_pos not in [b.pos for b in self._bombs]:  # don't pass over bombs
                     self._bomberman.pos = new_pos
                 for pos, _type in self._powerups:  # consume powerups
                     if new_pos == pos:
@@ -237,7 +258,7 @@ class Game:
             bomb.update()
             if bomb.exploded():
                 logger.debug("BOOM")
-                if bomb.in_range(self._bomberman):
+                if bomb.in_range(self._bomberman) and not self._bomberman.flamepass:
                     self.kill_bomberman()
 
                 for wall in self.map.walls[:]:
@@ -283,7 +304,7 @@ class Game:
             self._step % (self._bomberman.powers.count(Powerups.Speed) + 1) == 0
         ):  # increase speed of bomberman by moving enemies less often
             for enemy in self._enemies:
-                enemy.move(self.map, self._bomberman, self._bombs)
+                enemy.move(self.map, self._bomberman, self._bombs, self._enemies)
             self.collision()
 
         self._state = {
