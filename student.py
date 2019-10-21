@@ -5,6 +5,7 @@ import asyncio
 import websockets
 import getpass
 import os
+import logging
 
 from mapa import Map
 from ai_agent import AI_Agent
@@ -13,6 +14,9 @@ from ai_agent import AI_Agent
 import pygame
 
 pygame.init()
+
+wslogger = logging.getLogger("websockets")
+wslogger.setLevel(logging.WARN)
 
 async def agent_loop(server_address="localhost:8000", agent_name="ai_agent"):
     async with websockets.connect(f"ws://{server_address}/player") as websocket:

@@ -1,12 +1,14 @@
 
 import json
 import logging
+import math
 
 from mapa import Map
 
 logging.basicConfig(level=logging.DEBUG, format="%(asctime)s - %(name)s - %(levelname)s - %(message)s")
 
 class AI_Agent():
+
     def __init__(self, game_properties):
         self.logger = logging.getLogger("AI AGENT")
         self.logger.setLevel(logging.DEBUG)
@@ -14,8 +16,29 @@ class AI_Agent():
         self.map = Map(size=game_properties["size"], mapa=game_properties["map"])
         self.logger.info(self.map)
 
+    def dist(self, pos1, pos2):
+        return math.hypot(pos2[0]-pos1[0],pos2[1]-pos1[1])
+
+    def closest_enemy(self, cur_pos, enemies):
+        closest = None
+        for enemy in enemies:
+            d = self.dist(cur_pos, enemy['pos'])
+            if closest is None or d < closest[1]:
+                closest = (enemy, d)
+        return closest[0] 
+
     def next_move(self, state):
-        self.logger.info(state)
+        # self.logger.info(state)
+        cur_pos = state['bomberman']
+        enemies = state['enemies']
+        des_walls = state['walls']
+
+        if len(enemies) > 0:
+            # go for enemy
+            c = self.closest_enemy(cur_pos, enemies)
+            self.logger.info("Going for enemy: " + str(c))
+            return c
+
         return state
 
 
