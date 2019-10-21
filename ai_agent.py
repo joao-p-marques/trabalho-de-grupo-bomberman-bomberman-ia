@@ -15,40 +15,62 @@ class AI_Agent():
         self.logger.info("AI Agent created.")
         self.map = Map(size=game_properties["size"], mapa=game_properties["map"])
         self.logger.info(self.map)
+        self.cur_pos = None
+        self.walls = None
+        self.enemies = None
 
     def dist(self, pos1, pos2):
         return math.hypot(pos2[0]-pos1[0],pos2[1]-pos1[1])
 
-    def closest_enemy(self, cur_pos, enemies):
+    def closest_enemy(self):
         closest = None
-        for enemy in enemies:
-            d = self.dist(cur_pos, enemy['pos'])
+        for enemy in self.enemies:
+            d = self.dist(self.cur_pos, enemy['pos'])
             if closest is None or d < closest[1]:
                 closest = (enemy, d)
         return closest[0] 
     
     #Importante para nao perder tempo a procura de paredes
-    def closest_wall(self, cur_pos, walls):
+    def closest_wall(self):
         closest = None
-        for wall in walls:
-            d = self.dist(cur_pos, wall)
+        for wall in self.walls:
+            d = self.dist(self.cur_pos, wall)
             if closest is None or d < closest[1]:
                 closest = (wall, d)
         return closest[0] 
+    
+    def calculate_path(self, origin, goal):
+        if origin == goal:
+            return []
+        move_options = ['w', 'a', 's', 'd']
+        next_move = None
+        for move in move_options:
+            next_pos = self.map.calc_pos(origin, move)
+            if not self.map.is_blocked(next_pos) and not self.map.is_stone(next_pos):
+                d = self.dist(next_pos, goal)
+                if next_move is None or d < next_move[1]:
+                    next_move = (move, next_pos, d)
+        return [ next_move ] + self.calculate_path(next_move[1], goal)
+
+    def decide_move(self):
+        if len(self.enemies)>0:
+            self.logger.info("Going for enemy: " + str(closest_enemy))
+            return self.calculate_path(self.cur_pos, self.closest_enemy())[0]
+        else:
+            self.logger.info("Closest wall: " + str(closest_wall))
+            return self.calculate_path(self.cur_pos, self.closest_wall())
 
     def next_move(self, state):
         # self.logger.info(state)
-        cur_pos = state['bomberman']
-        enemies = state['enemies']
-        des_walls = state['walls']
+        self.cur_pos = state['bomberman']
+        self.enemies = state['enemies']
+        self.walls = state['walls']
         
         if len(enemies) > 0:
             # go for enemy
             closest_enemy = self.closest_enemy(cur_pos, enemies)
-            closest_wall = self.closest_wall(cur_pos,des_walls)
+            closest_wall = self.closest_wall(cur_pos,walls)
 
-            self.logger.info("Going for enemy: " + str(closest_enemy))
-            self.logger.info("Closest wall: " + str(closest_wall))
             return closest_enemy
 
         return state
