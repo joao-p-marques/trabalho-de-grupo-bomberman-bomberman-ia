@@ -26,18 +26,30 @@ class AI_Agent():
             if closest is None or d < closest[1]:
                 closest = (enemy, d)
         return closest[0] 
+    
+    #Importante para nao perder tempo a procura de paredes
+    def closest_wall(self, cur_pos, walls):
+        closest = None
+        for wall in walls:
+            d = self.dist(cur_pos, wall)
+            if closest is None or d < closest[1]:
+                closest = (wall, d)
+        return closest[0] 
 
     def next_move(self, state):
         # self.logger.info(state)
         cur_pos = state['bomberman']
         enemies = state['enemies']
         des_walls = state['walls']
-
+        
         if len(enemies) > 0:
             # go for enemy
-            c = self.closest_enemy(cur_pos, enemies)
-            self.logger.info("Going for enemy: " + str(c))
-            return c
+            closest_enemy = self.closest_enemy(cur_pos, enemies)
+            closest_wall = self.closest_wall(cur_pos,des_walls)
+
+            self.logger.info("Going for enemy: " + str(closest_enemy))
+            self.logger.info("Closest wall: " + str(closest_wall))
+            return closest_enemy
 
         return state
 
