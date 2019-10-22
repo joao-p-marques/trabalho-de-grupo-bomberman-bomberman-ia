@@ -4,6 +4,7 @@ import logging
 import math
 
 from mapa import Map
+from tree_search import *
 
 logging.basicConfig(level=logging.DEBUG, format="%(asctime)s - %(name)s - %(levelname)s - %(message)s")
 
@@ -13,11 +14,16 @@ class AI_Agent():
         self.logger = logging.getLogger("AI AGENT")
         self.logger.setLevel(logging.DEBUG)
         self.logger.info("AI Agent created.")
+
         self.map = Map(size=game_properties["size"], mapa=game_properties["map"])
         self.logger.info(self.map)
+
         self.cur_pos = None
         self.walls = None
         self.enemies = None
+        self.depth_limit = 100
+
+        self.search_domain = BombermanSearch(self.map)
 
     def dist(self, pos1, pos2):
         return math.hypot(pos2[0]-pos1[0],pos2[1]-pos1[1])
@@ -38,27 +44,48 @@ class AI_Agent():
             if closest is None or d < closest[1]:
                 closest = (wall, d)
         return closest[0] 
-    
+
+    # def calculate_path(self, origin, goal, depth=0):
+    #     if origin == goal:
+    #         return []
+    #     if depth > self.depth_limit:
+    #         self.logger.debug("Reached recursion depth limit of " + str(self.depth_limit))
+    #         return None
+    #     move_options = ['w', 'a', 's', 'd']
+    #     next_move = None
+    #     for move in move_options:
+    #         next_pos = self.map.calc_pos(origin, move)
+    #         if not self.map.is_blocked(next_pos) and not self.map.is_stone(next_pos):
+    #             d = self.dist(next_pos, goal)
+    #             if next_move is None or d < next_move[2]:
+    #                 next_move = (move, next_pos, d)
+    #                 path = self.calculate_path(next_move[1], goal, depth+1)
+    #                 if path is None:
+    #                     continue
+    #                 else:
+    #                     self.logger.debug("Path: " + str([next_move] + path))
+    #                     return [ next_move ] + path
+    #         else: # rollback
+    #             self.logger.debug("Rolling back")
+    #             return None
+    #     return None
+
     def calculate_path(self, origin, goal):
-        if origin == goal:
-            return []
-        move_options = ['w', 'a', 's', 'd']
-        next_move = None
-        for move in move_options:
-            next_pos = self.map.calc_pos(origin, move)
-            if not self.map.is_blocked(next_pos) and not self.map.is_stone(next_pos):
-                d = self.dist(next_pos, goal)
-                if next_move is None or d < next_move[1]:
-                    next_move = (move, next_pos, d)
-        return [ next_move ] + self.calculate_path(next_move[1], goal)
+        problem = SearchProblem(self.search_domain, origin, goal)
+        tree = SearchTree(problem, strategy='greedy')
+        self.logger.info("Searching path from " + str(origin) + " to " + str(goal))
+        return tree.search(depth_limit=20)
 
     def decide_move(self):
         if len(self.enemies)>0:
+            # go for enemy
+            closest_enemy = self.closest_enemy()
             self.logger.info("Going for enemy: " + str(closest_enemy))
-            return self.calculate_path(self.cur_pos, self.closest_enemy())[0]
+            return self.calculate_path(self.cur_pos, self.closest_enemy()['pos'])
         else:
+            closest_wall = self.closest_wall()
             self.logger.info("Closest wall: " + str(closest_wall))
-            return self.calculate_path(self.cur_pos, self.closest_wall())
+            return self.calculate_path(self.cur_pos, self.closest_wall()['pos'])
 
     def next_move(self, state):
         # self.logger.info(state)
@@ -66,14 +93,41 @@ class AI_Agent():
         self.enemies = state['enemies']
         self.walls = state['walls']
         
-        if len(enemies) > 0:
-            # go for enemy
-            closest_enemy = self.closest_enemy(cur_pos, enemies)
-            closest_wall = self.closest_wall(cur_pos,walls)
+        decision = self.decide_move()
+        self.logger.info("Path: " + str(decision))
+        return decision
 
-            return closest_enemy
+class BombermanSearch(SearchDomain):
 
-        return state
+    # construtor
+    def __init__(self, map):
+        self.map = map
+
+    # lista de accoes possiveis num estado
+    def actions(self, state):
+        pos = state
+        moves = ['w', 'a', 's', 'd']
+        actions_list = []
+        for move in moves:
+            next_pos = self.result(pos, move)
+            if not self.map.is_blocked(next_pos) and not self.map.is_stone(next_pos):
+                actions_list.append(move) 
+        return actions_list
+
+    # resultado de uma accao num estado, ou seja, o estado seguinte
+    def result(self, state, action):
+        return self.map.calc_pos(state, action)
+
+    # custo de uma accao num estado
+    def cost(self, state, action):
+        return 1
+
+    def dist(self, pos1, pos2):
+        return math.hypot(pos2[0]-pos1[0],pos2[1]-pos1[1])
+
+    # custo estimado de chegar de um estado a outro
+    def heuristic(self, state, goal_state):
+        return self.dist(state, goal_state)
 
 
 # Example output of STATE 
