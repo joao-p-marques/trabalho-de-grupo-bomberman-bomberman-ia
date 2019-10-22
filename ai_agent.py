@@ -26,6 +26,8 @@ class AI_Agent():
 
         self.search_domain = BombermanSearch(self.map)
 
+        self.decisions_queue = []
+
     def dist(self, pos1, pos2):
         return math.hypot(pos2[0]-pos1[0],pos2[1]-pos1[1])
 
@@ -73,9 +75,13 @@ class AI_Agent():
 
     def calculate_path(self, origin, goal):
         problem = SearchProblem(self.search_domain, origin, goal)
-        tree = SearchTree(problem, strategy='depth')
+        tree = SearchTree(problem, strategy='greedy')
         self.logger.info("Searching path from " + str(origin) + " to " + str(goal))
-        return tree.search(depth_limit=40)
+        path, moves = tree.search(depth_limit=40)
+        return (path, moves)
+
+    def hide(self, path, moves):
+        pass
 
     def decide_move(self):
         #if len(self.enemies)>0:
@@ -87,8 +93,20 @@ class AI_Agent():
             return self.calculate_path(self.cur_pos, self.closest_enemy()['pos'])
         else:
             closest_wall = self.closest_wall()
-            self.logger.info("Closest wall: " + str(closest_wall))
-            return self.calculate_path(self.cur_pos, self.closest_wall())
+
+            closest = None
+            for pos in [self.search_domain.result(closest_wall, mov) 
+                    for mov in self.search_domain.actions(closest_wall)]:
+                d = self.dist(self.cur_pos, pos)
+                if closest is None or d < closest[1]:
+                    closest = (pos, d)
+
+            self.logger.info("Closest wall: " + str(closest_wall) + 
+                    ". Going to " + str(closest[0]))
+
+            path, moves = self.calculate_path(self.cur_pos, closest[0])
+            moves.append('B') # leave a bomb at the end
+            return moves
 
     def next_move(self, state):
         # self.logger.info(state)
@@ -96,11 +114,14 @@ class AI_Agent():
         self.enemies = state['enemies']
         self.walls = state['walls']
         
-        decision = self.decide_move()
-        #moves = ["w","a","s","d"]
-        #decision = random.choice(moves)
-        self.logger.info("Path: " + str(decision))
-        return decision
+        if not self.decisions_queue: # if queue is empty
+            self.decisions_queue = self.decide_move()
+
+        self.logger.info("Path: " + str(self.decisions_queue))
+        next_move = self.decisions_queue.pop(0)
+        self.logger.info("Next move: " + str(next_move))
+
+        return next_move
 
 class BombermanSearch(SearchDomain):
 
@@ -124,7 +145,7 @@ class BombermanSearch(SearchDomain):
 
     # resultado de uma accao num estado, ou seja, o estado seguinte
     def result(self, state, action):
-        return self.map.calc_pos(state, action)
+        return list(self.map.calc_pos(state, action))
 
     # custo de uma accao num estado
     def cost(self, state, action):

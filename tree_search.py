@@ -59,12 +59,13 @@ class SearchProblem:
 # Nos de uma arvore de pesquisa
 class SearchNode:
 
-    def __init__(self, state, parent=None, depth=0, cum_cost=0, heuristic=0): 
+    def __init__(self, state, parent=None, depth=0, cum_cost=0, heuristic=0, action_to_reach=None): 
         self.state = state
         self.parent = parent
         self.depth = depth
         self.cum_cost = cum_cost
         self.heuristic = heuristic
+        self.action_to_reach = action_to_reach
 
     # verifica de forma recursiva se node esta no parent
     def in_parent(self, state):
@@ -85,7 +86,14 @@ class SearchTree:
     # construtor
     def __init__(self, problem, strategy='breadth'): 
         self.problem = problem
-        root = SearchNode(problem.initial, None, 0, 0, self.problem.domain.heuristic(self.problem.initial, self.problem.goal)) # depth and cum_cost initialized at 0
+        root = SearchNode(
+                problem.initial, 
+                None, 
+                0, 
+                0, 
+                self.problem.domain.heuristic(self.problem.initial, self.problem.goal),
+                None
+                ) # depth and cum_cost initialized at 0
         self.open_nodes = [root]
         self.strategy = strategy
         self.length = 0
@@ -104,8 +112,16 @@ class SearchTree:
         path = self.get_path(node.parent)
         path += [node.state]
         # path += [node]
-        print(path)
+        # print(path)
         return (path)
+
+    # get path actions from root to node
+    def get_path_actions(self, node):
+        if node.parent == None:
+            return []
+        path_actions = self.get_path_actions(node.parent)
+        path_actions += [node.action_to_reach]
+        return (path_actions)
 
     # obter o comprimento da soluçao
     def get_path_length(self, node):
@@ -128,7 +144,7 @@ class SearchTree:
 
             if self.problem.goal_test(node.state):
                 self.avg_depth = sum(self.depth_list) / len(self.depth_list)
-                return self.get_path(node)
+                return self.get_path(node), self.get_path_actions(node)
             lnewnodes = []
             node_actions = self.problem.domain.actions(node.state)
             for a in node_actions:
@@ -138,7 +154,10 @@ class SearchTree:
                                              node, 
                                              node.depth+1, 
                                              node.cum_cost + self.problem.domain.cost(node.state, a),
-                                             self.problem.domain.heuristic(newstate, self.problem.goal)
+                                             self.problem.domain.heuristic(
+                                                 newstate, 
+                                                 self.problem.goal),
+                                             a
                                             )]
             self.add_to_open(lnewnodes)
             if lnewnodes == []:
