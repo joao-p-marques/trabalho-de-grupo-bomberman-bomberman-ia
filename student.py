@@ -32,11 +32,12 @@ async def agent_loop(server_address="localhost:8000", agent_name="ai_agent"):
             try:
                 state = json.loads(await websocket.recv())  # receive game state, this must be called timely or your game will get out of sync with the server
 
-                ai.next_move(state)
+                decision = ai.next_move(state)
 
                 await websocket.send(
-                            json.dumps({"cmd": "key", "key": "s"})
-                        ) 
+                            json.dumps({"cmd": "key", "key": decision})
+                        )
+
                 
             except websockets.exceptions.ConnectionClosedOK:
                 print("Server has cleanly disconnected us")

@@ -2,6 +2,7 @@
 import json
 import logging
 import math
+import random
 
 from mapa import Map
 from tree_search import *
@@ -72,20 +73,22 @@ class AI_Agent():
 
     def calculate_path(self, origin, goal):
         problem = SearchProblem(self.search_domain, origin, goal)
-        tree = SearchTree(problem, strategy='greedy')
+        tree = SearchTree(problem, strategy='depth')
         self.logger.info("Searching path from " + str(origin) + " to " + str(goal))
-        return tree.search(depth_limit=20)
+        return tree.search(depth_limit=40)
 
     def decide_move(self):
-        if len(self.enemies)>0:
+        #if len(self.enemies)>0:
+        if False:
             # go for enemy
+            #Os inimigos movem por isso temos que voltar a calcular isto enquanto estamos no  ciclo
             closest_enemy = self.closest_enemy()
             self.logger.info("Going for enemy: " + str(closest_enemy))
             return self.calculate_path(self.cur_pos, self.closest_enemy()['pos'])
         else:
             closest_wall = self.closest_wall()
             self.logger.info("Closest wall: " + str(closest_wall))
-            return self.calculate_path(self.cur_pos, self.closest_wall()['pos'])
+            return self.calculate_path(self.cur_pos, self.closest_wall())
 
     def next_move(self, state):
         # self.logger.info(state)
@@ -94,6 +97,8 @@ class AI_Agent():
         self.walls = state['walls']
         
         decision = self.decide_move()
+        #moves = ["w","a","s","d"]
+        #decision = random.choice(moves)
         self.logger.info("Path: " + str(decision))
         return decision
 
@@ -102,6 +107,8 @@ class BombermanSearch(SearchDomain):
     # construtor
     def __init__(self, map):
         self.map = map
+        self.logger = logging.getLogger("AI AGENT")
+        self.logger.setLevel(logging.DEBUG)
 
     # lista de accoes possiveis num estado
     def actions(self, state):
@@ -111,6 +118,7 @@ class BombermanSearch(SearchDomain):
         for move in moves:
             next_pos = self.result(pos, move)
             if not self.map.is_blocked(next_pos) and not self.map.is_stone(next_pos):
+            #if not self.map.is_stone(next_pos):
                 actions_list.append(move) 
         return actions_list
 
