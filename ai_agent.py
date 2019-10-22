@@ -80,8 +80,63 @@ class AI_Agent():
         path, moves = tree.search(depth_limit=40)
         return (path, moves)
 
+    def select_bomb_point(self):
+        closest_wall = self.closest_wall()
+
+        closest = None
+        for pos in [self.search_domain.result(closest_wall, mov) 
+                for mov in self.search_domain.actions(closest_wall)]:
+            d = self.dist(self.cur_pos, pos)
+            if closest is None or d < closest[1]:
+                closest = (pos, d)
+
+        self.logger.info("Closest wall: " + str(closest_wall) + 
+                ". Going to " + str(closest[0]))
+
+        path, moves = self.calculate_path(self.cur_pos, closest[0])
+        return (path, moves)
+
     def hide(self, path, moves):
-        pass
+        # hide in nearby position 
+        # but choose the one closest to next wall ? not yet
+
+        possible_moves = [['w', 'a'], 
+                          ['w', 'd'], 
+                          ['s', 'a'],
+                          ['s', 'd'],
+                          ['a', 's'],
+                          ['a', 'w'],
+                          ['d', 'w'],
+                          ['d', 's'],
+                          ['w', 'w', 'a'],
+                          ['w', 'w', 'd'],
+                          ['s', 's', 'a'],
+                          ['s', 's', 'd'],
+                          ['a', 'a', 'a'],
+                          ['a', 'a', 'd'],
+                          ['d', 'd', 'a'],
+                          ['d', 'd', 'd']
+                          ]
+
+        last_pos = path[-1]
+
+        best = None
+        for possible_move in possible_moves:
+            p = [last_pos]
+            this_works = True
+            for move in possible_move:
+                if move in self.search_domain.actions(p[-1]):
+                    p.append(self.search_domain.result(p[-1], move))
+                else:
+                    this_works = False
+                    break
+            if this_works:
+                best = (p, possible_move)
+                break
+
+        path += best[0]
+        moves += best[1]
+        # no need to return because pointer ?
 
     def decide_move(self):
         #if len(self.enemies)>0:
@@ -92,20 +147,9 @@ class AI_Agent():
             self.logger.info("Going for enemy: " + str(closest_enemy))
             return self.calculate_path(self.cur_pos, self.closest_enemy()['pos'])
         else:
-            closest_wall = self.closest_wall()
-
-            closest = None
-            for pos in [self.search_domain.result(closest_wall, mov) 
-                    for mov in self.search_domain.actions(closest_wall)]:
-                d = self.dist(self.cur_pos, pos)
-                if closest is None or d < closest[1]:
-                    closest = (pos, d)
-
-            self.logger.info("Closest wall: " + str(closest_wall) + 
-                    ". Going to " + str(closest[0]))
-
-            path, moves = self.calculate_path(self.cur_pos, closest[0])
+            path, moves = self.select_bomb_point() 
             moves.append('B') # leave a bomb at the end
+            self.hide(path, moves)
             return moves
 
     def next_move(self, state):
