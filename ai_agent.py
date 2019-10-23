@@ -19,6 +19,8 @@ class AI_Agent():
         self.map = Map(size=game_properties["size"], mapa=game_properties["map"])
         self.logger.info(self.map)
 
+        self.reverse_plays = {"a":"d","w":"s","s":"w","d":"a"}
+
         self.cur_pos = None
         self.walls = None
         self.enemies = None
@@ -147,9 +149,28 @@ class AI_Agent():
             self.logger.info("Going for enemy: " + str(closest_enemy))
             return self.calculate_path(self.cur_pos, self.closest_enemy()['pos'])
         else:
+
             path, moves = self.select_bomb_point() 
             moves.append('B') # leave a bomb at the end
             self.hide(path, moves)
+            closest_wall = self.closest_wall()
+
+            # closest = None
+            # for pos in [self.search_domain.result(closest_wall, mov) 
+            #         for mov in self.search_domain.actions(closest_wall)]:
+            #     d = self.dist(self.cur_pos, pos)
+            #     if closest is None or d < closest[1]:
+            #         closest = (pos, d)
+
+            # self.logger.info("Closest wall: " + str(closest_wall) + 
+            #         ". Going to " + str(closest[0]))
+
+            # path, moves = self.calculate_path(self.cur_pos, closest[0])
+            # moves_after_bomb = moves[-3:]
+            # moves.append('B') # leave a bomb at the end
+            # for move in moves_after_bomb:
+            #     moves.append(self.reverse_plays[move])
+
             return moves
 
     def next_move(self, state):
