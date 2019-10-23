@@ -94,6 +94,8 @@ class AI_Agent():
 
         self.logger.info("Closest wall: " + str(closest_wall) + 
                 ". Going to " + str(closest[0]))
+        
+        self.bombpos = closest[0]
 
         path, moves = self.calculate_path(self.cur_pos, closest[0])
         return (path, moves)
@@ -101,7 +103,6 @@ class AI_Agent():
     def hide(self, path, moves):
         # hide in nearby position 
         # but choose the one closest to next wall ? not yet
-
         possible_moves = [['w', 'a'], 
                           ['w', 'd'], 
                           ['s', 'a'],
@@ -121,12 +122,25 @@ class AI_Agent():
                           ]
 
         last_pos = path[-1]
-
         best = None
         for possible_move in possible_moves:
+            
             p = [last_pos]
             this_works = True
-            for move in possible_move:
+            
+            #print(last_pos,possible_move)
+
+            if self.can_i_do_this(last_pos, possible_move):
+                for move in possible_move:
+                    p.append(self.search_domain.result(p[-1], move))
+                
+                best = (p, possible_move)
+                break
+
+
+
+            """for move in possible_move:
+                
                 if move in self.search_domain.actions(p[-1]):
                     p.append(self.search_domain.result(p[-1], move))
                 else:
@@ -134,11 +148,23 @@ class AI_Agent():
                     break
             if this_works:
                 best = (p, possible_move)
-                break
+                break"""
+        
+        #print("MY DECISION", best[1])
 
         path += best[0]
         moves += best[1]
         # no need to return because pointer ?
+    
+    def can_i_do_this(self,pos, possible_move):
+        if possible_move == []:
+            return True
+
+        letter = possible_move[0]
+        #print(pos, letter, letter in self.search_domain.actions(pos))
+
+        return (letter in self.search_domain.actions(pos)) and self.can_i_do_this(self.search_domain.result(pos, letter), possible_move[1:])
+        
 
     def decide_move(self):
         #if len(self.enemies)>0:
@@ -201,16 +227,27 @@ class BombermanSearch(SearchDomain):
         pos = state
         moves = ['w', 'a', 's', 'd']
         actions_list = []
+        
         for move in moves:
             next_pos = self.result(pos, move)
             if not self.map.is_blocked(next_pos) and not self.map.is_stone(next_pos):
+                
             #if not self.map.is_stone(next_pos):
                 actions_list.append(move) 
         return actions_list
 
     # resultado de uma accao num estado, ou seja, o estado seguinte
     def result(self, state, action):
-        return list(self.map.calc_pos(state, action))
+        if action == 'w':
+            return [state[0], state[1]-1]
+        if action == 'a':
+            return [state[0]-1, state[1]]
+        if action == 's':
+            return [state[0], state[1]+1]
+        if action == 'd':
+            return [state[0]+1, state[1]]
+        
+        #return list(self.map.calc_pos(state, action))
 
     # custo de uma accao num estado
     def cost(self, state, action):
