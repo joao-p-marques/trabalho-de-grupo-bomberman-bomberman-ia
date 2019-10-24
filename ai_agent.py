@@ -19,14 +19,13 @@ class AI_Agent():
         self.map = Map(size=game_properties["size"], mapa=game_properties["map"])
         self.logger.info(self.map)
 
-        self.reverse_plays = {"a":"d","w":"s","s":"w","d":"a"}
-
         self.cur_pos = None
         self.walls = None
         self.enemies = None
         self.powerups = None
         self.bonus = None
         self.exit = None
+        self.lives = 3 #this shouldnt be hardcoded
 
         # self.TTT = None
 
@@ -163,7 +162,7 @@ class AI_Agent():
             path = [self.cur_pos]
 
             closest_enemy = self.closest_enemy()
-            if self.dist(self.cur_pos, closest_enemy['pos']) <= 3 :
+            if self.dist(self.cur_pos, closest_enemy['pos']) <= 1 :
                 moves.append('B')
                 self.hide(path, moves)
                 return moves
@@ -172,6 +171,11 @@ class AI_Agent():
             moves.append(allmoves[0])
             return moves
 
+        elif self.exit != []:
+            moves=[]
+            self.calculate_path(self.cur_pos, self.exit)
+            moves.append(allmoves[0])
+            return moves
             
         else:
             closest_wall = self.closest_wall()
@@ -191,6 +195,13 @@ class AI_Agent():
         self.bonus = state['bonus']
         self.exit = state['exit']
 
+        lost_life = self.lives != state['lives']
+        self.lives = state['lives']
+        #Clear after death
+        if lost_life:
+            self.logger.info("I Died, will restart decisionQueue")
+            self.decisions_queue = []
+        
         # if self.TTT is None:
         #     self.TTT = self.walls[0]
         # self.logger.debug("TTTTTTT " + str(self.search_domain.map.is_blocked(self.TTT)) + ", " + 
