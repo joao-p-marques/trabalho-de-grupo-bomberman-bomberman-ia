@@ -27,6 +27,8 @@ class AI_Agent():
         self.exit = None
         self.lives = 3 #this shouldnt be hardcoded
 
+        self.pursuing_enemy = None
+
         # self.TTT = None
 
         self.depth_limit = 100
@@ -62,6 +64,16 @@ class AI_Agent():
         path, moves = tree.search(depth_limit=self.depth_limit)
         self.logger.debug("Path found.")
         return (path, moves)
+
+    def find_direction(self, path):
+        prev_pos = path[0]
+        for pos in path:
+            if prev_pos[0] < pos[0]: 
+
+
+    def calculate_path_predict(self, origin, goal=self.pursuing_enemy):
+        interesting_moves = goal[1][-5:] # get last 3 positions
+        
 
     def select_bomb_point(self, target):
         closest = None
@@ -143,8 +155,6 @@ class AI_Agent():
                     possible_move[1:])
         
     def decide_move(self):
-
-
         if self.powerups: # powerup to pick up
             powerup = self.powerups.pop(0)[0] # 0 - pos, 1 - type
             self.logger.info("Going for powerup: " + str(powerup))
@@ -153,25 +163,38 @@ class AI_Agent():
         elif len(self.enemies)>0:
             # go for enemy
             #Os inimigos movem por isso temos que voltar a calcular isto enquanto estamos no  ciclo
-            """closest_enemy = self.closest_enemy()
-            self.logger.info("Going for enemy: " + str(closest_enemy))
-            path, moves = self.calculate_path(self.cur_pos, self.closest_enemy()['pos'])
-            moves.append('B')
-            self.hide(path, moves)"""
+
+            # closest_enemy = self.closest_enemy()
+            # self.logger.info("Going for enemy: " + str(closest_enemy))
+            # path, moves = self.calculate_path(self.cur_pos, self.closest_enemy()['pos'])
+            # moves.append('B')
+            # self.hide(path, moves)
+
             moves=[]
             path = [self.cur_pos]
 
             closest_enemy = self.closest_enemy()
+
+            # started pursuing different enemy
+            if (self.pursuing_enemy is None or 
+                    self.pursuing_enemy[0]['id'] != closest_enemy['id']): 
+                self.pursuing_enemy = (closest_enemy, [])
+            else:
+                self.pursuing_enemy[1].append(closest_enemy['pos']) # keep track of enemy movement
+
             if self.dist(self.cur_pos, closest_enemy['pos']) <= 1 :
                 moves.append('B')
                 self.hide(path, moves)
                 return moves
+            elif self.dist(self.cur_pos, closest_enemy['pos']) <= 4: # close enough to predict path
+                self.calculate_path_predict(self.cur_pos)
+                return moves
+            else:
+                allpath, allmoves = self.calculate_path(self.cur_pos, closest_enemy['pos'])
+                moves.append(allmoves[0])
+                return moves
 
-            allpath, allmoves = self.calculate_path(self.cur_pos, self.closest_enemy()['pos'])
-            moves.append(allmoves[0])
-            return moves
-
-        elif self.exit != []:
+        elif self.exit: # exit is available
             moves=[]
             self.calculate_path(self.cur_pos, self.exit)
             moves.append(allmoves[0])
@@ -197,6 +220,7 @@ class AI_Agent():
 
         lost_life = self.lives != state['lives']
         self.lives = state['lives']
+
         #Clear after death
         if lost_life:
             self.logger.info("I Died, will restart decisionQueue")
