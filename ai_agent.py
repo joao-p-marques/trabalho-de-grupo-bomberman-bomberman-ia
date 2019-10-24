@@ -99,7 +99,6 @@ class AI_Agent():
         last_pos = path[-1]
         best = None
         for possible_move in possible_moves:
-            
             p = [last_pos]
             this_works = True
             
@@ -123,11 +122,10 @@ class AI_Agent():
             #     best = (p, possible_move)
             #     break
         
-        #print("MY DECISION", best[1])
+        print("MY DECISION", best[1])
 
         path += best[0]
         moves += best[1]
-        # no need to return because pointer ?
     
     def can_i_do_this(self, pos, possible_move):
         if possible_move == []:
@@ -150,28 +148,10 @@ class AI_Agent():
             self.logger.info("Going for enemy: " + str(closest_enemy))
             return self.calculate_path(self.cur_pos, self.closest_enemy()['pos'])
         else:
-
             path, moves = self.select_bomb_point() 
             moves.append('B') # leave a bomb at the end
             self.hide(path, moves)
             closest_wall = self.closest_wall()
-
-            # closest = None
-            # for pos in [self.search_domain.result(closest_wall, mov) 
-            #         for mov in self.search_domain.actions(closest_wall)]:
-            #     d = self.dist(self.cur_pos, pos)
-            #     if closest is None or d < closest[1]:
-            #         closest = (pos, d)
-
-            # self.logger.info("Closest wall: " + str(closest_wall) + 
-            #         ". Going to " + str(closest[0]))
-
-            # path, moves = self.calculate_path(self.cur_pos, closest[0])
-            # moves_after_bomb = moves[-3:]
-            # moves.append('B') # leave a bomb at the end
-            # for move in moves_after_bomb:
-            #     moves.append(self.reverse_plays[move])
-
             return moves
 
     def next_move(self, state):
@@ -179,9 +159,13 @@ class AI_Agent():
         self.cur_pos = state['bomberman']
         self.enemies = state['enemies']
         self.walls = state['walls']
-        
-        if not self.decisions_queue: # if queue is empty
+
+        # if queue is empty and there are no bombs placed
+        if not self.decisions_queue and not state['bombs']: 
             self.decisions_queue = self.decide_move()
+
+        if not self.decisions_queue:
+            return ''
 
         self.logger.info("Path: " + str(self.decisions_queue))
         next_move = self.decisions_queue.pop(0)
@@ -206,9 +190,8 @@ class BombermanSearch(SearchDomain):
         for move in moves:
             next_pos = self.result(pos, move)
             if not self.map.is_blocked(next_pos) and not self.map.is_stone(next_pos):
-                
-            #if not self.map.is_stone(next_pos):
                 actions_list.append(move) 
+
         return actions_list
 
     # resultado de uma accao num estado, ou seja, o estado seguinte
