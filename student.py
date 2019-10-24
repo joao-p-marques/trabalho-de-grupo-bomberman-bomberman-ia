@@ -30,6 +30,7 @@ async def agent_loop(server_address="localhost:8000", agent_name="ai_agent"):
 
         while True:
             try:
+                #print("WEBSOCKET SIZE:", websocket.messages)
                 state = json.loads(await websocket.recv())  # receive game state, this must be called timely or your game will get out of sync with the server
 
                 decision = ai.next_move(state)

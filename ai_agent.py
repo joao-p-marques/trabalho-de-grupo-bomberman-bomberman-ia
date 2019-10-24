@@ -144,6 +144,8 @@ class AI_Agent():
                     possible_move[1:])
         
     def decide_move(self):
+
+
         if self.powerups: # powerup to pick up
             powerup = self.powerups.pop(0)[0] # 0 - pos, 1 - type
             self.logger.info("Going for powerup: " + str(powerup))
@@ -161,7 +163,7 @@ class AI_Agent():
             path = [self.cur_pos]
 
             closest_enemy = self.closest_enemy()
-            if self.dist(self.cur_pos, closest_enemy['pos']) <= 2 :
+            if self.dist(self.cur_pos, closest_enemy['pos']) <= 3 :
                 moves.append('B')
                 self.hide(path, moves)
                 return moves
