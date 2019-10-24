@@ -24,6 +24,12 @@ class AI_Agent():
         self.cur_pos = None
         self.walls = None
         self.enemies = None
+        self.powerups = None
+        self.bonus = None
+        self.exit = None
+
+        # self.TTT = None
+
         self.depth_limit = 100
 
         self.search_domain = BombermanSearch(self.map)
@@ -55,19 +61,18 @@ class AI_Agent():
         tree = SearchTree(problem, strategy='greedy')
         self.logger.info("Searching path from " + str(origin) + " to " + str(goal))
         path, moves = tree.search(depth_limit=40)
+        self.logger.debug("Path found.")
         return (path, moves)
 
-    def select_bomb_point(self):
-        closest_wall = self.closest_wall()
-
+    def select_bomb_point(self, target):
         closest = None
-        for pos in [self.search_domain.result(closest_wall, mov) 
-                for mov in self.search_domain.actions(closest_wall)]:
+        for pos in [self.search_domain.result(target, mov) 
+                for mov in self.search_domain.actions(target)]:
             d = self.dist(self.cur_pos, pos)
             if closest is None or d < closest[1]:
                 closest = (pos, d)
 
-        self.logger.info("Closest wall: " + str(closest_wall) + 
+        self.logger.info("Closest wall: " + str(target) + 
                 ". Going to " + str(closest[0]))
         
         self.bombpos = closest[0]
@@ -122,7 +127,7 @@ class AI_Agent():
             #     best = (p, possible_move)
             #     break
         
-        print("MY DECISION", best[1])
+        self.logger.info("Hiding from bomb in " + str(best[0][-1]) + " (" + str(best[1]) + ")")
 
         path += best[0]
         moves += best[1]
@@ -138,27 +143,40 @@ class AI_Agent():
                 self.search_domain.result(pos, letter), 
                     possible_move[1:])
         
-
     def decide_move(self):
-        #if len(self.enemies)>0:
-        if False:
+        if self.powerups: # powerup to pick up
+            powerup = self.powerups.pop(0)[0] # 0 - pos, 1 - type
+            self.search_domain.set_destroyed_wall(powerup)
+            self.logger.info("Going for powerup: " + str(powerup))
+            path, moves = self.calculate_path(self.cur_pos, powerup)
+            return moves
+        elif False: #if len(self.enemies)>0:
             # go for enemy
             #Os inimigos movem por isso temos que voltar a calcular isto enquanto estamos no  ciclo
             closest_enemy = self.closest_enemy()
             self.logger.info("Going for enemy: " + str(closest_enemy))
             return self.calculate_path(self.cur_pos, self.closest_enemy()['pos'])
         else:
-            path, moves = self.select_bomb_point() 
+            closest_wall = self.closest_wall()
+            path, moves = self.select_bomb_point(closest_wall) 
             moves.append('B') # leave a bomb at the end
             self.hide(path, moves)
-            closest_wall = self.closest_wall()
             return moves
 
     def next_move(self, state):
         # self.logger.info(state)
+
         self.cur_pos = state['bomberman']
         self.enemies = state['enemies']
         self.walls = state['walls']
+        self.powerups = state['powerups']
+        self.bonus = state['bonus']
+        self.exit = state['exit']
+
+        # if self.TTT is None:
+        #     self.TTT = self.walls[0]
+        # self.logger.debug("TTTTTTT " + str(self.search_domain.map.is_blocked(self.TTT)) + ", " + 
+        #         str(self.search_domain.map.is_stone(self.TTT)))
 
         # if queue is empty and there are no bombs placed
         if not self.decisions_queue and not state['bombs']: 
@@ -176,10 +194,14 @@ class AI_Agent():
 class BombermanSearch(SearchDomain):
 
     # construtor
-    def __init__(self, map):
+    def __init__(self, map, destroyed_walls=[]):
         self.map = map
         self.logger = logging.getLogger("AI AGENT")
         self.logger.setLevel(logging.DEBUG)
+        self.destroyed_walls = destroyed_walls
+
+    def set_destroyed_wall(self, destroyed_wall):
+        self.destroyed_walls.append(destroyed_wall)
 
     # lista de accoes possiveis num estado
     def actions(self, state):
@@ -189,7 +211,9 @@ class BombermanSearch(SearchDomain):
         
         for move in moves:
             next_pos = self.result(pos, move)
-            if not self.map.is_blocked(next_pos) and not self.map.is_stone(next_pos):
+            if ((not self.map.is_blocked(next_pos) and 
+                    not self.map.is_stone(next_pos)) or
+                    next_pos in self.destroyed_walls):
                 actions_list.append(move) 
 
         return actions_list
