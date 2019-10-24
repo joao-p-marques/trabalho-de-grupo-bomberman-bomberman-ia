@@ -50,31 +50,6 @@ class AI_Agent():
                 closest = (wall, d)
         return closest[0] 
 
-    # def calculate_path(self, origin, goal, depth=0):
-    #     if origin == goal:
-    #         return []
-    #     if depth > self.depth_limit:
-    #         self.logger.debug("Reached recursion depth limit of " + str(self.depth_limit))
-    #         return None
-    #     move_options = ['w', 'a', 's', 'd']
-    #     next_move = None
-    #     for move in move_options:
-    #         next_pos = self.map.calc_pos(origin, move)
-    #         if not self.map.is_blocked(next_pos) and not self.map.is_stone(next_pos):
-    #             d = self.dist(next_pos, goal)
-    #             if next_move is None or d < next_move[2]:
-    #                 next_move = (move, next_pos, d)
-    #                 path = self.calculate_path(next_move[1], goal, depth+1)
-    #                 if path is None:
-    #                     continue
-    #                 else:
-    #                     self.logger.debug("Path: " + str([next_move] + path))
-    #                     return [ next_move ] + path
-    #         else: # rollback
-    #             self.logger.debug("Rolling back")
-    #             return None
-    #     return None
-
     def calculate_path(self, origin, goal):
         problem = SearchProblem(self.search_domain, origin, goal)
         tree = SearchTree(problem, strategy='greedy')
@@ -115,10 +90,10 @@ class AI_Agent():
                           ['w', 'w', 'd'],
                           ['s', 's', 'a'],
                           ['s', 's', 'd'],
-                          ['a', 'a', 'a'],
-                          ['a', 'a', 'd'],
-                          ['d', 'd', 'a'],
-                          ['d', 'd', 'd']
+                          ['a', 'a', 'w'],
+                          ['a', 'a', 's'],
+                          ['d', 'd', 'w'],
+                          ['d', 'd', 's']
                           ]
 
         last_pos = path[-1]
@@ -137,18 +112,16 @@ class AI_Agent():
                 best = (p, possible_move)
                 break
 
-
-
-            """for move in possible_move:
+            # for move in possible_move:
                 
-                if move in self.search_domain.actions(p[-1]):
-                    p.append(self.search_domain.result(p[-1], move))
-                else:
-                    this_works = False
-                    break
-            if this_works:
-                best = (p, possible_move)
-                break"""
+            #     if move in self.search_domain.actions(p[-1]):
+            #         p.append(self.search_domain.result(p[-1], move))
+            #     else:
+            #         this_works = False
+            #         break
+            # if this_works:
+            #     best = (p, possible_move)
+            #     break
         
         #print("MY DECISION", best[1])
 
@@ -163,7 +136,9 @@ class AI_Agent():
         letter = possible_move[0]
         #print(pos, letter, letter in self.search_domain.actions(pos))
 
-        return (letter in self.search_domain.actions(pos)) and self.can_i_do_this(self.search_domain.result(pos, letter), possible_move[1:])
+        return (letter in self.search_domain.actions(pos)) and 
+                    self.can_i_do_this(self.search_domain.result(pos, letter), 
+                            possible_move[1:])
         
 
     def decide_move(self):
