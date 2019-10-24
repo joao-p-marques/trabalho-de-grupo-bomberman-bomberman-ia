@@ -34,10 +34,7 @@ async def agent_loop(server_address="localhost:8000", agent_name="ai_agent"):
 
                 decision = ai.next_move(state)
 
-                await websocket.send(
-                            json.dumps({"cmd": "key", "key": decision})
-                        )
-
+                await websocket.send(json.dumps({"cmd": "key", "key": decision}))
                 
             except websockets.exceptions.ConnectionClosedOK:
                 print("Server has cleanly disconnected us")
