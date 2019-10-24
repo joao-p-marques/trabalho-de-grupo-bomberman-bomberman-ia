@@ -60,7 +60,7 @@ class AI_Agent():
         problem = SearchProblem(self.search_domain, origin, goal)
         tree = SearchTree(problem, strategy='greedy')
         self.logger.info("Searching path from " + str(origin) + " to " + str(goal))
-        path, moves = tree.search(depth_limit=40)
+        path, moves = tree.search(depth_limit=self.depth_limit)
         self.logger.debug("Path found.")
         return (path, moves)
 
