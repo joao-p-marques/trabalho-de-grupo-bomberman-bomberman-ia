@@ -149,19 +149,35 @@ class AI_Agent():
             self.logger.info("Going for powerup: " + str(powerup))
             path, moves = self.calculate_path(self.cur_pos, powerup)
             return moves
-        elif False: #if len(self.enemies)>0:
+        elif len(self.enemies)>0:
             # go for enemy
             #Os inimigos movem por isso temos que voltar a calcular isto enquanto estamos no  ciclo
-            closest_enemy = self.closest_enemy()
+            """closest_enemy = self.closest_enemy()
             self.logger.info("Going for enemy: " + str(closest_enemy))
-            return self.calculate_path(self.cur_pos, self.closest_enemy()['pos'])
+            path, moves = self.calculate_path(self.cur_pos, self.closest_enemy()['pos'])
+            moves.append('B')
+            self.hide(path, moves)"""
+            moves=[]
+            path = [self.cur_pos]
+
+            closest_enemy = self.closest_enemy()
+            if self.dist(self.cur_pos, closest_enemy['pos']) <= 2 :
+                moves.append('B')
+                self.hide(path, moves)
+                return moves
+
+            allpath, allmoves = self.calculate_path(self.cur_pos, self.closest_enemy()['pos'])
+            moves.append(allmoves[0])
+            return moves
+
+            
         else:
             closest_wall = self.closest_wall()
             path, moves = self.select_bomb_point(closest_wall) 
             moves.append('B') # leave a bomb at the end
             self.hide(path, moves)
             self.search_domain.set_destroyed_wall(closest_wall)
-            return moves
+            return moves        
 
     def next_move(self, state):
         # self.logger.info(state)
