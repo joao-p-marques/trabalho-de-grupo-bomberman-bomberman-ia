@@ -146,7 +146,6 @@ class AI_Agent():
     def decide_move(self):
         if self.powerups: # powerup to pick up
             powerup = self.powerups.pop(0)[0] # 0 - pos, 1 - type
-            self.search_domain.set_destroyed_wall(powerup)
             self.logger.info("Going for powerup: " + str(powerup))
             path, moves = self.calculate_path(self.cur_pos, powerup)
             return moves
@@ -161,6 +160,7 @@ class AI_Agent():
             path, moves = self.select_bomb_point(closest_wall) 
             moves.append('B') # leave a bomb at the end
             self.hide(path, moves)
+            self.search_domain.set_destroyed_wall(closest_wall)
             return moves
 
     def next_move(self, state):
