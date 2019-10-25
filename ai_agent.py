@@ -67,8 +67,11 @@ class AI_Agent():
 
     def find_direction(self, path):
         prev_pos = path[0]
+        moves = []
         for pos in path:
             if prev_pos[0] < pos[0]: 
+                move.append('a')
+            elif 
 
 
     def calculate_path_predict(self, origin, goal=self.pursuing_enemy):
