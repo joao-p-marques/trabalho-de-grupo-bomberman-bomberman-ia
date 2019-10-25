@@ -147,6 +147,7 @@ class SearchTree:
                 return self.get_path(node), self.get_path_actions(node)
             lnewnodes = []
             node_actions = self.problem.domain.actions(node.state)
+            # print(node_actions)
             for a in node_actions:
                 newstate = self.problem.domain.result(node.state,a)
                 if (not node.in_parent(newstate)) and node.depth < depth_limit:

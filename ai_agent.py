@@ -65,18 +65,43 @@ class AI_Agent():
         self.logger.debug("Path found.")
         return (path, moves)
 
-    def find_direction(self, path):
-        prev_pos = path[0]
-        moves = []
-        for pos in path:
-            if prev_pos[0] < pos[0]: 
-                move.append('a')
-            elif 
+    def find_direction(self, prev_pos, pos):
+        if prev_pos[0] < pos[0]: 
+            return 'd'
+        elif prev_pos[0] > pos[0]:
+            return 'a'
+        elif prev_pos[1] < pos[1]:
+            return 'w'
+        elif prev_pos[1] > pos[1]:
+            return 's'
 
+    def opposite_move(self, move):
+        if move == 'w':
+            return 's'
+        elif move == 's':
+            return 'w'
+        elif move == 'a':
+            return 'd'
+        elif move == 'd':
+            return 'a'
 
-    def calculate_path_predict(self, origin, goal=self.pursuing_enemy):
-        interesting_moves = goal[1][-5:] # get last 3 positions
-        
+    def running_away(self, move):
+        # self.logger.debug(str(self.pursuing_enemy))
+        if (self.find_direction(self.pursuing_enemy['last_pos'], self.pursuing_enemy['pos']) == move 
+                and ((self.cur_pos[0] == self.pursuing_enemy['pos']) 
+                    or (self.cur_pos[1] == self.pursuing_enemy['pos']))):
+            self.logger.info("Enemy running away from me.")
+            return True
+        return False
+
+    def running_towards(self, move):
+        # self.logger.debug(str(self.pursuing_enemy))
+        if (self.find_direction(self.pursuing_enemy['last_pos'], self.pursuing_enemy['pos']) == self.opposite_move(move)
+                and ((self.cur_pos[0] == self.pursuing_enemy['pos']) 
+                    or (self.cur_pos[1] == self.pursuing_enemy['pos']))):
+            self.logger.info("Enemy running towards me.")
+            return True
+        return False
 
     def select_bomb_point(self, target):
         closest = None
@@ -129,17 +154,6 @@ class AI_Agent():
                 
                 best = (p, possible_move)
                 break
-
-            # for move in possible_move:
-                
-            #     if move in self.search_domain.actions(p[-1]):
-            #         p.append(self.search_domain.result(p[-1], move))
-            #     else:
-            #         this_works = False
-            #         break
-            # if this_works:
-            #     best = (p, possible_move)
-            #     break
         
         self.logger.info("Hiding from bomb in " + str(best[0][-1]) + " (" + str(best[1]) + ")")
 
@@ -150,12 +164,17 @@ class AI_Agent():
         if possible_move == []:
             return True
 
+        enemies_pos = []
+        for e in self.enemies:
+            enemies_pos.append(e['pos'])
+
         letter = possible_move[0]
         #print(pos, letter, letter in self.search_domain.actions(pos))
 
-        return (letter in self.search_domain.actions(pos)) and self.can_i_do_this(
-                self.search_domain.result(pos, letter), 
-                    possible_move[1:])
+        return ((letter in self.search_domain.actions(pos))
+                and self.can_i_do_this(
+                    self.search_domain.result(pos, letter), 
+                        possible_move[1:]))
         
     def decide_move(self):
         if self.powerups: # powerup to pick up
@@ -167,40 +186,44 @@ class AI_Agent():
             # go for enemy
             #Os inimigos movem por isso temos que voltar a calcular isto enquanto estamos no  ciclo
 
-            # closest_enemy = self.closest_enemy()
-            # self.logger.info("Going for enemy: " + str(closest_enemy))
-            # path, moves = self.calculate_path(self.cur_pos, self.closest_enemy()['pos'])
-            # moves.append('B')
-            # self.hide(path, moves)
-
-            moves=[]
-            path = [self.cur_pos]
+            # moves=[]
+            # path = [self.cur_pos]
 
             closest_enemy = self.closest_enemy()
 
             # started pursuing different enemy
             if (self.pursuing_enemy is None or 
-                    self.pursuing_enemy[0]['id'] != closest_enemy['id']): 
-                self.pursuing_enemy = (closest_enemy, [])
+                    self.pursuing_enemy['id'] != closest_enemy['id']): 
+                self.pursuing_enemy = closest_enemy
+                self.pursuing_enemy['last_pos'] = None
             else:
-                self.pursuing_enemy[1].append(closest_enemy['pos']) # keep track of enemy movement
+                last_pos = self.pursuing_enemy['pos'] # keep track of enemy movement
+                self.pursuing_enemy = closest_enemy
+                self.pursuing_enemy['last_pos'] = last_pos
 
-            if self.dist(self.cur_pos, closest_enemy['pos']) <= 1 :
-                moves.append('B')
-                self.hide(path, moves)
+            path, moves = self.calculate_path(self.cur_pos, closest_enemy['pos'])
+            mov = moves[0]
+
+            if self.dist(self.cur_pos, closest_enemy['pos']) <= 1:
+                moves = ['B']
+                self.hide([self.cur_pos], moves)
                 return moves
-            elif self.dist(self.cur_pos, closest_enemy['pos']) <= 4: # close enough to predict path
-                self.calculate_path_predict(self.cur_pos)
-                return moves
-            else:
-                allpath, allmoves = self.calculate_path(self.cur_pos, closest_enemy['pos'])
-                moves.append(allmoves[0])
-                return moves
+            elif self.dist(self.cur_pos, closest_enemy['pos']) <= 2:
+                if self.pursuing_enemy['last_pos'] is not None:
+                    if self.running_away(mov): # enemy running away so keep going
+                        # moves = ['B', mov]
+                        # self.hide([self.cur_pos, path[0]], moves)
+                        return moves
+                    elif self.running_towards(mov): # enemy running towards me so run away
+                        moves = [self.opposite_move(mov), 'B']
+                        path = [self.cur_pos, self.search_domain.result(self.cur_pos, moves[0])]
+                        self.hide(path, moves)
+                        return moves
+
+            return [mov]
 
         elif self.exit: # exit is available
-            moves=[]
-            self.calculate_path(self.cur_pos, self.exit)
-            moves.append(allmoves[0])
+            path, moves = self.calculate_path(self.cur_pos, self.exit)
             return moves
             
         else:
