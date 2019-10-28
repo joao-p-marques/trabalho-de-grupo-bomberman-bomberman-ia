@@ -144,6 +144,7 @@ class AI_Agent():
         last_pos = path[-1]
         best = None
         for possible_move in possible_moves:
+
             path = self.result(possible_move)
             if self.closest_enemy()['pos'] in path:
                 continue
