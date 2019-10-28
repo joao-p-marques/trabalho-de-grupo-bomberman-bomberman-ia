@@ -282,6 +282,7 @@ class BombermanSearch(SearchDomain):
     def set_destroyed_wall(self, destroyed_wall):
         self.destroyed_walls.append(destroyed_wall)
 
+
     # lista de accoes possiveis num estado
     def actions(self, state):
         pos = state
