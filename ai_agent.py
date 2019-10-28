@@ -204,11 +204,11 @@ class AI_Agent():
             path, moves = self.calculate_path(self.cur_pos, closest_enemy['pos'])
             mov = moves[0]
 
-            if self.dist(self.cur_pos, closest_enemy['pos']) <= 1:
+            if self.dist(self.cur_pos, closest_enemy['pos']) <= 2:
                 moves = ['B']
                 self.hide([self.cur_pos], moves)
                 return moves
-            elif self.dist(self.cur_pos, closest_enemy['pos']) <= 2:
+            elif self.dist(self.cur_pos, closest_enemy['pos']) <= 3:
                 if self.pursuing_enemy['last_pos'] is not None:
                     if self.running_away(mov): # enemy running away so keep going
                         # moves = ['B', mov]
