@@ -28,6 +28,7 @@ class AI_Agent():
         self.lives = 3 #this shouldnt be hardcoded
 
         self.pursuing_enemy = None
+        self.eval_enemy = None
 
         # self.TTT = None
 
@@ -143,6 +144,10 @@ class AI_Agent():
         last_pos = path[-1]
         best = None
         for possible_move in possible_moves:
+            path = self.result(possible_move)
+            if self.closest_enemy()['pos'] in path:
+                continue
+
             p = [last_pos]
             this_works = True
             
@@ -159,6 +164,15 @@ class AI_Agent():
 
         path += best[0]
         moves += best[1]
+
+    def result(self, moves, origin=None):
+        if origin is None:
+            origin = self.cur_pos
+        path = [origin]
+        for mov in moves:
+            r = self.search_domain.result(path[-1], mov)
+            path += r
+        return path
     
     def can_i_do_this(self, pos, possible_move):
         if possible_move == []:
@@ -189,6 +203,8 @@ class AI_Agent():
             # moves=[]
             # path = [self.cur_pos]
 
+            # self.eval_enemy = True
+
             closest_enemy = self.closest_enemy()
 
             # started pursuing different enemy
@@ -201,32 +217,45 @@ class AI_Agent():
                 self.pursuing_enemy = closest_enemy
                 self.pursuing_enemy['last_pos'] = last_pos
 
+            # if self.decisions_queue:
+            #     self.loggger.debug("Already have queue")
+            #     moves = self.decisions_queue
+            #     path = self.result(moves)
+            # else:
+            #     path, moves = self.calculate_path(self.cur_pos, closest_enemy['pos'])
+            #     mov = moves[0]
+
             path, moves = self.calculate_path(self.cur_pos, closest_enemy['pos'])
-            mov = moves[0]
+            # mov = moves[0]
 
             if self.dist(self.cur_pos, closest_enemy['pos']) <= 1:
                 moves = ['B']
                 self.hide([self.cur_pos], moves)
+                # if not closest_enemy['pos'] in path:
+                #     return moves
                 return moves
-            elif self.dist(self.cur_pos, closest_enemy['pos']) <= 2:
-                if self.pursuing_enemy['last_pos'] is not None:
-                    if self.running_away(mov): # enemy running away so keep going
-                        # moves = ['B', mov]
-                        # self.hide([self.cur_pos, path[0]], moves)
-                        return moves
-                    elif self.running_towards(mov): # enemy running towards me so run away
-                        moves = [self.opposite_move(mov), 'B']
-                        path = [self.cur_pos, self.search_domain.result(self.cur_pos, moves[0])]
-                        self.hide(path, moves)
-                        return moves
+            else:
+                return [moves[0]]
 
-            return [mov]
+            # elif self.dist(self.cur_pos, closest_enemy['pos']) <= 2:
+            #     if self.pursuing_enemy['last_pos'] is not None:
+            #         if self.running_away(mov): # enemy running away so keep going
+            #             # moves = ['B', mov]
+            #             # self.hide([self.cur_pos, path[0]], moves)
+            #             return moves
+            #         elif self.running_towards(mov): # enemy running towards me so run away
+            #             moves = [self.opposite_move(mov), 'B']
+            #             path = [self.cur_pos, self.search_domain.result(self.cur_pos, moves[0])]
+            #             self.hide(path, moves)
+            #             return moves
 
         elif self.exit: # exit is available
+            self.eval_enemy = False
             path, moves = self.calculate_path(self.cur_pos, self.exit)
             return moves
             
         else:
+            self.eval_enemy = False
             closest_wall = self.closest_wall()
             path, moves = self.select_bomb_point(closest_wall) 
             moves.append('B') # leave a bomb at the end
@@ -258,7 +287,7 @@ class AI_Agent():
         #         str(self.search_domain.map.is_stone(self.TTT)))
 
         # if queue is empty and there are no bombs placed
-        if not self.decisions_queue and not state['bombs']: 
+        if (not self.decisions_queue) and not state['bombs']: 
             self.decisions_queue = self.decide_move()
 
         if not self.decisions_queue:
@@ -315,7 +344,8 @@ class BombermanSearch(SearchDomain):
         return 1
 
     def dist(self, pos1, pos2):
-        return math.hypot(pos2[0]-pos1[0],pos2[1]-pos1[1])
+        # return math.hypot(pos2[0]-pos1[0],pos2[1]-pos1[1])
+        return abs(pos2[0]-pos1[0]) + abs(pos2[1]-pos1[1])
 
     # custo estimado de chegar de um estado a outro
     def heuristic(self, state, goal_state):
