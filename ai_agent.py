@@ -172,7 +172,7 @@ class AI_Agent():
         path = [origin]
         for mov in moves:
             r = self.search_domain.result(path[-1], mov)
-            path += r
+            path.append(r)
         return path
     
     def can_i_do_this(self, pos, possible_move):
@@ -229,11 +229,14 @@ class AI_Agent():
             path, moves = self.calculate_path(self.cur_pos, closest_enemy['pos'])
             # mov = moves[0]
 
+            # if self.dist(self.cur_pos, closest_enemy['pos']) <= 2:
+            #     if self.running_towards(moves[0]):
+            #         moves = ['B']
+            #         self.hide([self.cur_pos], moves)
+            #         return moves
             if self.dist(self.cur_pos, closest_enemy['pos']) <= 1:
                 moves = ['B']
                 self.hide([self.cur_pos], moves)
-                # if not closest_enemy['pos'] in path:
-                #     return moves
                 return moves
             else:
                 return [moves[0]]
