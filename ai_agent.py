@@ -244,24 +244,6 @@ class AI_Agent():
             # mov = moves[0]
 
             if self.dist(self.cur_pos, closest_enemy['pos']) <= 2:
-<<<<<<< HEAD
-                moves = ['B']
-                self.hide([self.cur_pos], moves)
-                return moves
-            elif self.dist(self.cur_pos, closest_enemy['pos']) <= 3:
-                if self.pursuing_enemy['last_pos'] is not None:
-                    if self.running_away(mov): # enemy running away so keep going
-                        # moves = ['B', mov]
-                        # self.hide([self.cur_pos, path[0]], moves)
-                        return moves
-                    elif self.running_towards(mov): # enemy running towards me so run away
-                        moves = [self.opposite_move(mov), 'B']
-                        path = [self.cur_pos, self.search_domain.result(self.cur_pos, moves[0])]
-                        self.hide(path, moves)
-                        return moves
-
-            return [mov]
-=======
                 if self.running_towards(moves[0]):
                     moves = ['B']
                     self.hide([self.cur_pos], moves)
@@ -284,7 +266,6 @@ class AI_Agent():
             #             path = [self.cur_pos, self.search_domain.result(self.cur_pos, moves[0])]
             #             self.hide(path, moves)
             #             return moves
->>>>>>> f4150efcb22c81af1c65bf590eab18f507c3e683
 
         elif self.exit: # exit is available
             # self.eval_enemy = False
