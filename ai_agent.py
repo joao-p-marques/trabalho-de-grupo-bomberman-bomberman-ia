@@ -248,7 +248,7 @@ class AI_Agent():
                     moves = ['B']
                     self.hide([self.cur_pos], moves)
                     return moves
-            if self.dist(self.cur_pos, closest_enemy['pos']) <= 1:
+            if self.dist(self.cur_pos, closest_enemy['pos']) <= 2:
                 moves = ['B']
                 self.hide([self.cur_pos], moves)
                 return moves
@@ -278,7 +278,6 @@ class AI_Agent():
             path, moves = self.select_bomb_point(closest_wall) 
             moves.append('B') # leave a bomb at the end
             self.hide(path, moves)
-            self.search_domain.set_destroyed_wall(closest_wall)
             return moves        
 
     def next_move(self, state):
@@ -286,11 +285,21 @@ class AI_Agent():
 
         self.cur_pos = state['bomberman']
         self.enemies = state['enemies']
-        self.walls = state['walls']
         self.powerups = state['powerups']
         self.bonus = state['bonus']
         self.exit = state['exit']
+        self.walls = state['walls']
+        
+        #Workaround to compare previous and current walls
+        # finalWalls = state['walls']
+        # destroyed_walls = []
+        # if finalWalls != None and self.walls != None:
+        #     initialWalls = self.walls
+        #     destroyed_walls = list( set(initialWalls) - set(finalWalls) )
+        #     for wall in destroyed_walls:
+        #         self.search_domain.set_destroyed_wall(wall)
 
+        # self.walls = finalWalls
         lost_life = self.lives != state['lives']
         self.lives = state['lives']
 
@@ -329,6 +338,8 @@ class BombermanSearch(SearchDomain):
     def set_destroyed_wall(self, destroyed_wall):
         self.destroyed_walls.append(destroyed_wall)
 
+    def reset_destroyed_wall(self):
+        self.destroyed_walls = []
 
     # lista de accoes possiveis num estado
     def actions(self, state):
