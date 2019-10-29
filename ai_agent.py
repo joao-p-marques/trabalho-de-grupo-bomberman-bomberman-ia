@@ -288,18 +288,19 @@ class AI_Agent():
         self.powerups = state['powerups']
         self.bonus = state['bonus']
         self.exit = state['exit']
-        self.walls = state['walls']
         
+        #self.walls = state['walls']
         #Workaround to compare previous and current walls
-        # finalWalls = state['walls']
-        # destroyed_walls = []
-        # if finalWalls != None and self.walls != None:
-        #     initialWalls = self.walls
-        #     destroyed_walls = list( set(initialWalls) - set(finalWalls) )
-        #     for wall in destroyed_walls:
-        #         self.search_domain.set_destroyed_wall(wall)
+        finalWalls = state['walls']
+        destroyed_walls = []
+        if finalWalls != None and self.walls != None:
+            initialWalls = self.walls
+            self.logger.info("FinalWalls: \n%s, \nInitialwalls: \n%s" % (finalWalls,initialWalls))
+            #destroyed_walls = list( set(initialWalls) - set(finalWalls) )
+            for wall in destroyed_walls:
+                self.search_domain.set_destroyed_wall(wall)
 
-        # self.walls = finalWalls
+        self.walls = finalWalls
         lost_life = self.lives != state['lives']
         self.lives = state['lives']
 
@@ -333,13 +334,10 @@ class BombermanSearch(SearchDomain):
         self.map = map
         self.logger = logging.getLogger("AI AGENT")
         self.logger.setLevel(logging.DEBUG)
-        self.destroyed_walls = destroyed_walls
 
+    #Alterar para isto
     def set_destroyed_wall(self, destroyed_wall):
-        self.destroyed_walls.append(destroyed_wall)
-
-    def reset_destroyed_wall(self):
-        self.destroyed_walls = []
+        self.map.remove_wall(destroyed_wall)
 
     # lista de accoes possiveis num estado
     def actions(self, state):
@@ -350,8 +348,7 @@ class BombermanSearch(SearchDomain):
         for move in moves:
             next_pos = self.result(pos, move)
             if ((not self.map.is_blocked(next_pos) and 
-                    not self.map.is_stone(next_pos)) or
-                    next_pos in self.destroyed_walls):
+                    not self.map.is_stone(next_pos))):
                 actions_list.append(move) 
 
         return actions_list
