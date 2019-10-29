@@ -96,10 +96,15 @@ class AI_Agent():
         return False
 
     def running_towards(self, move):
-        if not 'last_pos' in self.pursuing_enemy or self.pursuing_enemy['last_pos'] is None or self.pursuing_enemy is None:
+        if (not 'last_pos' in self.pursuing_enemy 
+                or self.pursuing_enemy['last_pos'] is None 
+                or self.pursuing_enemy is None):
             return False
         self.logger.debug(str(self.pursuing_enemy))
-        if (self.find_direction(self.pursuing_enemy['last_pos'], self.pursuing_enemy['pos']) == self.opposite_move(move)
+        if (self.find_direction(
+            self.pursuing_enemy['last_pos'], 
+            self.pursuing_enemy['pos']
+            ) == self.opposite_move(move)
                 and ((self.cur_pos[0] == self.pursuing_enemy['pos'][0]) 
                     or (self.cur_pos[1] == self.pursuing_enemy['pos'][1]))):
             self.logger.info("Enemy running towards me.")
@@ -288,19 +293,25 @@ class AI_Agent():
         self.powerups = state['powerups']
         self.bonus = state['bonus']
         self.exit = state['exit']
-        
         #self.walls = state['walls']
-        #Workaround to compare previous and current walls
-        finalWalls = state['walls']
-        destroyed_walls = []
-        if finalWalls != None and self.walls != None:
-            initialWalls = self.walls
-            self.logger.info("FinalWalls: \n%s, \nInitialwalls: \n%s" % (finalWalls,initialWalls))
-            #destroyed_walls = list( set(initialWalls) - set(finalWalls) )
-            for wall in destroyed_walls:
-                self.search_domain.set_destroyed_wall(wall)
 
-        self.walls = finalWalls
+        #Workaround to compare previous and current walls
+        new_walls = state['walls']
+        if self.walls is not None:
+            for wall in [w for w in new_walls not in self.walls]:
+                self.search_domain.set_destroyed_wall(wall)
+        self.walls = new_walls
+
+        #destroyed_walls = []
+        #if finalWalls != None and self.walls != None:
+        #    initialWalls = self.walls
+        #    self.logger.info("FinalWalls: \n%s, \nInitialwalls: \n%s" % (finalWalls,initialWalls))
+        #    #destroyed_walls = list( set(initialWalls) - set(finalWalls) )
+        #    for wall in destroyed_walls:
+        #        self.search_domain.set_destroyed_wall(wall)
+
+        # self.walls = finalWalls
+
         lost_life = self.lives != state['lives']
         self.lives = state['lives']
 
