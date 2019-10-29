@@ -298,7 +298,7 @@ class AI_Agent():
         #Workaround to compare previous and current walls
         new_walls = state['walls']
         if self.walls is not None:
-            for wall in [w for w in new_walls not in self.walls]:
+            for wall in [w for w in new_walls if w not in self.walls]:
                 self.search_domain.set_destroyed_wall(wall)
         self.walls = new_walls
 
