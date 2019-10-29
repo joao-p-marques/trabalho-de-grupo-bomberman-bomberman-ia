@@ -62,6 +62,7 @@ class AI_Agent():
         problem = SearchProblem(self.search_domain, origin, goal)
         tree = SearchTree(problem, strategy='greedy')
         self.logger.info("Searching path from " + str(origin) + " to " + str(goal))
+        # self.logger.debug(self.walls)
         path, moves = tree.search(depth_limit=self.depth_limit)
         self.logger.debug("Path found.")
         return (path, moves)
@@ -298,7 +299,7 @@ class AI_Agent():
         #Workaround to compare previous and current walls
         new_walls = state['walls']
         if self.walls is not None:
-            for wall in [w for w in new_walls if w not in self.walls]:
+            for wall in [w for w in self.walls if w not in new_walls]:
                 self.search_domain.set_destroyed_wall(wall)
         self.walls = new_walls
 
@@ -348,6 +349,7 @@ class BombermanSearch(SearchDomain):
 
     #Alterar para isto
     def set_destroyed_wall(self, destroyed_wall):
+        print(f"Detroyed Wall: {destroyed_wall}")
         self.map.remove_wall(destroyed_wall)
 
     # lista de accoes possiveis num estado

@@ -92,6 +92,9 @@ class Map:
         return self._walls
 
     def remove_wall(self, wall):
+        if not wall in self._walls:
+            # print("No wall here")
+            return
         self._walls.remove(wall)
 
     @property

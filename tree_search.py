@@ -98,12 +98,6 @@ class SearchTree:
         self.strategy = strategy
         self.length = 0
         self.cost = 0
-        self.terminal_nodes = 0
-        self.non_terminal_nodes = 1
-        self.ramification = 0
-        self.most_cum_cost = []
-        self.depth_list = []
-        self.avg_depth = 0
 
     # obter o caminho (sequencia de estados) da raiz ate um no
     def get_path(self,node):
@@ -135,19 +129,12 @@ class SearchTree:
             node = self.open_nodes.pop(0)
             self.cost+=node.cum_cost
             self.length += 1
-            self.depth_list.append(node.depth)
-
-            if len(self.most_cum_cost) == 0 or node.cum_cost > self.most_cum_cost[0].cum_cost:
-                self.most_cum_cost = [node]
-            elif node.cum_cost == self.most_cum_cost[0].cum_cost and not node in self.most_cum_cost:
-                self.most_cum_cost.append(node)
 
             if self.problem.goal_test(node.state):
-                self.avg_depth = sum(self.depth_list) / len(self.depth_list)
                 return self.get_path(node), self.get_path_actions(node)
+
             lnewnodes = []
             node_actions = self.problem.domain.actions(node.state)
-            # print(node_actions)
             for a in node_actions:
                 newstate = self.problem.domain.result(node.state,a)
                 if (not node.in_parent(newstate)) and node.depth < depth_limit:
@@ -161,11 +148,6 @@ class SearchTree:
                                              a
                                             )]
             self.add_to_open(lnewnodes)
-            if lnewnodes == []:
-                self.terminal_nodes += 1
-                self.non_terminal_nodes -= 1
-            self.non_terminal_nodes += len(lnewnodes)
-            self.ramification = self.length / self.non_terminal_nodes
         return None
 
     # juntar novos nos a lista de nos abertos de acordo com a estrategia
