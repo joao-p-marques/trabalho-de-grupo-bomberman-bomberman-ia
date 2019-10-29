@@ -28,7 +28,7 @@ class AI_Agent():
         self.lives = 3 #this shouldnt be hardcoded
 
         self.pursuing_enemy = None
-        self.eval_enemy = None
+        # self.eval_enemy = None
 
         # self.TTT = None
 
@@ -190,6 +190,18 @@ class AI_Agent():
                 and self.can_i_do_this(
                     self.search_domain.result(pos, letter), 
                         possible_move[1:]))
+
+    def predict_enemy(self, n_moves, enemy=None):
+        if enemy is None:
+            enemy = self.pursuing_enemy
+
+        if 'last_pos' in enemy:
+            direction = self.find_direction(enemy['last_pos'], enemy['pos'])
+            moves = [direction for _ in range(n_moves)]
+            result = self.result(moves, enemy['pos'])
+            return result
+        else:
+            return None
         
     def decide_move(self):
         if self.powerups: # powerup to pick up
@@ -254,12 +266,12 @@ class AI_Agent():
             #             return moves
 
         elif self.exit: # exit is available
-            self.eval_enemy = False
+            # self.eval_enemy = False
             path, moves = self.calculate_path(self.cur_pos, self.exit)
             return moves
             
         else:
-            self.eval_enemy = False
+            # self.eval_enemy = False
             closest_wall = self.closest_wall()
             path, moves = self.select_bomb_point(closest_wall) 
             moves.append('B') # leave a bomb at the end
