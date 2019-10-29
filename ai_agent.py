@@ -96,6 +96,8 @@ class AI_Agent():
         return False
 
     def running_towards(self, move):
+        if not 'last_pos' in self.pursuing_enemy or self.pursuing_enemy is None:
+            return False
         self.logger.debug(str(self.pursuing_enemy))
         if (self.find_direction(self.pursuing_enemy['last_pos'], self.pursuing_enemy['pos']) == self.opposite_move(move)
                 and ((self.cur_pos[0] == self.pursuing_enemy['pos'][0]) 
