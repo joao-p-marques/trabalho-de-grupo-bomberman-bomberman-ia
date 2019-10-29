@@ -96,10 +96,10 @@ class AI_Agent():
         return False
 
     def running_towards(self, move):
-        # self.logger.debug(str(self.pursuing_enemy))
+        self.logger.debug(str(self.pursuing_enemy))
         if (self.find_direction(self.pursuing_enemy['last_pos'], self.pursuing_enemy['pos']) == self.opposite_move(move)
-                and ((self.cur_pos[0] == self.pursuing_enemy['pos']) 
-                    or (self.cur_pos[1] == self.pursuing_enemy['pos']))):
+                and ((self.cur_pos[0] == self.pursuing_enemy['pos'][0]) 
+                    or (self.cur_pos[1] == self.pursuing_enemy['pos'][1]))):
             self.logger.info("Enemy running towards me.")
             return True
         return False
@@ -146,7 +146,7 @@ class AI_Agent():
         for possible_move in possible_moves:
 
             path = self.result(possible_move)
-            if self.closest_enemy()['pos'] in path:
+            if len(self.enemies) > 0 and self.closest_enemy()['pos'] in path:
                 continue
 
             p = [last_pos]
@@ -241,11 +241,11 @@ class AI_Agent():
             path, moves = self.calculate_path(self.cur_pos, closest_enemy['pos'])
             # mov = moves[0]
 
-            # if self.dist(self.cur_pos, closest_enemy['pos']) <= 2:
-            #     if self.running_towards(moves[0]):
-            #         moves = ['B']
-            #         self.hide([self.cur_pos], moves)
-            #         return moves
+            if self.dist(self.cur_pos, closest_enemy['pos']) <= 2:
+                if self.running_towards(moves[0]):
+                    moves = ['B']
+                    self.hide([self.cur_pos], moves)
+                    return moves
             if self.dist(self.cur_pos, closest_enemy['pos']) <= 1:
                 moves = ['B']
                 self.hide([self.cur_pos], moves)
