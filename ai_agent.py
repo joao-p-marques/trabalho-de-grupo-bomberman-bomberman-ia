@@ -236,9 +236,9 @@ class AI_Agent():
 
         #Wait for the enemies
         #Talvez ver pelo return do path, verificar se ele esta na posiçao onde um inimigo ja tenha passado e caso la tenha passado 3 vezes fica la a espera de bombas
-        if len(self.enemies)>0:
-            path, moves = self.calculate_path(self.cur_pos, [1,1])
-            return moves
+        # if len(self.enemies)>0:
+        #     path, moves = self.calculate_path(self.cur_pos, [1,1])
+        #     return moves
 
         if self.dist(self.cur_pos,closest_enemy['pos']) < self.dist(self.cur_pos, closest_wall):
             # started pursuing different enemy
