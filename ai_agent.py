@@ -33,7 +33,7 @@ class AI_Agent():
         # self.TTT = None
 
         self.depth_limit = 100
-
+        self.loop = 0
         self.search_domain = BombermanSearch(self.map)
 
         self.decisions_queue = []
@@ -234,7 +234,11 @@ class AI_Agent():
         closest_enemy = self.closest_enemy()
         closest_wall = self.closest_wall()
 
-        
+        #Wait for the enemies
+        #Talvez ver pelo return do path, verificar se ele esta na posiçao onde um inimigo ja tenha passado e caso la tenha passado 3 vezes fica la a espera de bombas
+        if len(self.enemies)>0:
+            path, moves = self.calculate_path(self.cur_pos, [1,1])
+            return moves
 
         if self.dist(self.cur_pos,closest_enemy['pos']) < self.dist(self.cur_pos, closest_wall):
             # started pursuing different enemy
