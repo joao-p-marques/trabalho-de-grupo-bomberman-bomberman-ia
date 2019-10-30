@@ -25,12 +25,11 @@ class AI_Agent():
         self.powerups = None
         self.bonus = None
         self.exit = None
+        self.have_powerup = None
         self.lives = 3 #this shouldnt be hardcoded
 
         self.pursuing_enemy = None
         # self.eval_enemy = None
-
-        # self.TTT = None
 
         self.depth_limit = 100
         self.loop = 0
@@ -222,6 +221,7 @@ class AI_Agent():
     def decide_move(self):
         if self.powerups: # powerup to pick up
             powerup = self.powerups.pop(0)[0] # 0 - pos, 1 - type
+            self.have_powerup = True
             self.logger.info("Going for powerup: " + str(powerup))
             path, moves = self.calculate_path(self.cur_pos, powerup)
             return moves
@@ -240,7 +240,9 @@ class AI_Agent():
         #     path, moves = self.calculate_path(self.cur_pos, [1,1])
         #     return moves
 
-        if self.dist(self.cur_pos,closest_enemy['pos']) < self.dist(self.cur_pos, closest_wall):
+        if (self.dist(self.cur_pos,closest_enemy['pos']) < self.dist(self.cur_pos, closest_wall)
+           or (self.have_powerup and self.exit)
+           ):
             # started pursuing different enemy
             if (self.pursuing_enemy is None or 
                     self.pursuing_enemy['id'] != closest_enemy['id']): 
@@ -281,70 +283,6 @@ class AI_Agent():
             self.hide(path, moves)
             return moves 
             
-        # if len(self.enemies)>0:
-        #     # go for enemy
-        #     #Os inimigos movem por isso temos que voltar a calcular isto enquanto estamos no  ciclo
-
-        #     # moves=[]
-        #     # path = [self.cur_pos]
-
-        #     # self.eval_enemy = True
-
-        #     closest_enemy = self.closest_enemy()
-
-        #     # started pursuing different enemy
-        #     if (self.pursuing_enemy is None or 
-        #             self.pursuing_enemy['id'] != closest_enemy['id']): 
-        #         self.pursuing_enemy = closest_enemy
-        #         self.pursuing_enemy['last_pos'] = None
-        #     else:
-        #         last_pos = self.pursuing_enemy['pos'] # keep track of enemy movement
-        #         self.pursuing_enemy = closest_enemy
-        #         self.pursuing_enemy['last_pos'] = last_pos
-
-        #     # if self.decisions_queue:
-        #     #     self.loggger.debug("Already have queue")
-        #     #     moves = self.decisions_queue
-        #     #     path = self.result(moves)
-        #     # else:
-        #     #     path, moves = self.calculate_path(self.cur_pos, closest_enemy['pos'])
-        #     #     mov = moves[0]
-
-        #     path, moves = self.calculate_path(self.cur_pos, closest_enemy['pos'])
-        #     # mov = moves[0]
-
-        #     if self.dist(self.cur_pos, closest_enemy['pos']) <= 2:
-        #         if self.running_towards(moves[0]):
-        #             moves = ['B']
-        #             self.hide([self.cur_pos], moves)
-        #             return moves
-        #     if self.dist(self.cur_pos, closest_enemy['pos']) <= 2:
-        #         moves = ['B']
-        #         self.hide([self.cur_pos], moves)
-        #         return moves
-        #     else:
-        #         return [moves[0]]
-
-            # elif self.dist(self.cur_pos, closest_enemy['pos']) <= 2:
-            #     if self.pursuing_enemy['last_pos'] is not None:
-            #         if self.running_away(mov): # enemy running away so keep going
-            #             # moves = ['B', mov]
-            #             # self.hide([self.cur_pos, path[0]], moves)
-            #             return moves
-            #         elif self.running_towards(mov): # enemy running towards me so run away
-            #             moves = [self.opposite_move(mov), 'B']
-            #             path = [self.cur_pos, self.search_domain.result(self.cur_pos, moves[0])]
-            #             self.hide(path, moves)
-            #             return moves
-
-        # elif self.exit: # exit is available
-        #     # self.eval_enemy = False
-        #     path, moves = self.calculate_path(self.cur_pos, self.exit)
-        #     self.search_domain.destroyed_walls = []
-        #     return moves
-
-                   
-
     def next_move(self, state):
         # self.logger.info(state)
 
@@ -362,16 +300,6 @@ class AI_Agent():
                 self.search_domain.set_destroyed_wall(wall)
         self.walls = new_walls
 
-        #destroyed_walls = []
-        #if finalWalls != None and self.walls != None:
-        #    initialWalls = self.walls
-        #    self.logger.info("FinalWalls: \n%s, \nInitialwalls: \n%s" % (finalWalls,initialWalls))
-        #    #destroyed_walls = list( set(initialWalls) - set(finalWalls) )
-        #    for wall in destroyed_walls:
-        #        self.search_domain.set_destroyed_wall(wall)
-
-        # self.walls = finalWalls
-
         lost_life = self.lives != state['lives']
         self.lives = state['lives']
 
@@ -379,11 +307,6 @@ class AI_Agent():
         if lost_life:
             self.logger.info("I Died, will restart decisionQueue")
             self.decisions_queue = []
-        
-        # if self.TTT is None:
-        #     self.TTT = self.walls[0]
-        # self.logger.debug("TTTTTTT " + str(self.search_domain.map.is_blocked(self.TTT)) + ", " + 
-        #         str(self.search_domain.map.is_stone(self.TTT)))
 
         # if queue is empty and there are no bombs placed
         if (not self.decisions_queue) and not state['bombs']: 
