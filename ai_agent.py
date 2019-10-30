@@ -28,6 +28,7 @@ class AI_Agent():
         self.have_powerup = None
         self.lives = 3 #this shouldnt be hardcoded
 
+        self.enemy_past_pos = {}
         self.pursuing_enemy = None
         # self.eval_enemy = None
 
@@ -231,8 +232,12 @@ class AI_Agent():
             self.search_domain.destroyed_walls = []
             return moves
         
-        closest_enemy = self.closest_enemy()
-        closest_wall = self.closest_wall()
+        #Does this solve?
+        if len(self.enemies)>0:
+            closest_enemy = self.closest_enemy()
+        if len(self.walls)>0:
+            closest_wall = self.closest_wall()
+
 
         #Wait for the enemies
         #Talvez ver pelo return do path, verificar se ele esta na posiçao onde um inimigo ja tenha passado e caso la tenha passado 3 vezes fica la a espera de bombas
@@ -264,11 +269,12 @@ class AI_Agent():
             path, moves = self.calculate_path(self.cur_pos, closest_enemy['pos'])
             # mov = moves[0]
 
-            if self.dist(self.cur_pos, closest_enemy['pos']) <= 2:
-                if self.running_towards(moves[0]):
-                    moves = ['B']
-                    self.hide([self.cur_pos], moves)
-                    return moves
+            # Tornar esta condiçao caso o inimigos esta a correr nanossa direçao?
+            # if self.dist(self.cur_pos, closest_enemy['pos']) <= 2:
+            #     if self.running_towards(moves[0]):
+            #         moves = ['B']
+            #         self.hide([self.cur_pos], moves)
+            #         return moves
             if self.dist(self.cur_pos, closest_enemy['pos']) <= 2:
                 moves = ['B']
                 self.hide([self.cur_pos], moves)
@@ -293,6 +299,17 @@ class AI_Agent():
         self.exit = state['exit']
         #self.walls = state['walls']
 
+        #Keep track of enemies past positions to check for loops
+        for enemy in self.enemies:
+            if enemy['id'] in self.enemy_past_pos:
+                old_pos = self.enemy_past_pos[enemy['id']]
+                new_pos = enemy['pos']
+                old_pos.append(new_pos)
+                self.enemy_past_pos[enemy['id']] = old_pos
+            else:
+                self.enemy_past_pos[enemy['id']] = [enemy['pos']] 
+
+        self.logger.info("Past enemies positions: %s" % (self.enemy_past_pos))
         #Workaround to compare previous and current walls
         new_walls = state['walls']
         if self.walls is not None:
@@ -364,7 +381,9 @@ class BombermanSearch(SearchDomain):
         #return list(self.map.calc_pos(state, action))
 
     # custo de uma accao num estado
-    def cost(self, state, action):
+    def cost(self, state, action, enemy=False):
+        if enemy:
+            return 20
         return 1
 
     def dist(self, pos1, pos2):
