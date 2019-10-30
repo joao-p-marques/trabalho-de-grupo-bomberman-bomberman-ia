@@ -101,7 +101,7 @@ class AI_Agent():
                 or self.pursuing_enemy['last_pos'] is None 
                 or self.pursuing_enemy is None):
             return False
-        self.logger.debug(str(self.pursuing_enemy))
+        # self.logger.debug(str(self.pursuing_enemy))
         if (self.find_direction(
             self.pursuing_enemy['last_pos'], 
             self.pursuing_enemy['pos']
@@ -222,9 +222,12 @@ class AI_Agent():
     def decide_move(self):
         if self.powerups: # powerup to pick up
             powerup = self.powerups.pop(0)[0] # 0 - pos, 1 - type
-            self.have_powerup = True
             self.logger.info("Going for powerup: " + str(powerup))
             path, moves = self.calculate_path(self.cur_pos, powerup)
+            if len(self.enemies)>0:
+                self.have_powerup = False
+                self.powerups.append(powerup)
+                return [moves[0]]
             return moves
 
         if self.exit and len(self.enemies)<1:
@@ -265,10 +268,21 @@ class AI_Agent():
             # else:
             #     path, moves = self.calculate_path(self.cur_pos, closest_enemy['pos'])
             #     mov = moves[0]
+
             if [1,1] in self.enemy_past_pos[closest_enemy['id']]:
                 path, moves = self.calculate_path(self.cur_pos, [1,1])
             else:
                 path, moves = self.calculate_path(self.cur_pos, closest_enemy['pos'])
+                if (self.dist(self.cur_pos, closest_enemy['pos']) <= 2
+                    and self.running_towards(moves[0])):
+                    moves = ['B']
+                    self.hide([self.cur_pos], moves)
+                elif self.dist(self.cur_pos, closest_enemy['pos']) <= 1:
+                    moves = ['B']
+                    self.hide([self.cur_pos], moves)
+                else:
+                    return [moves[0]]
+
             # mov = moves[0]
 
             # Tornar esta condiçao caso o inimigos esta a correr nanossa direçao?
@@ -277,9 +291,6 @@ class AI_Agent():
             #         moves = ['B']
             #         self.hide([self.cur_pos], moves)
             #         return moves
-            if self.dist(self.cur_pos, closest_enemy['pos']) <= 2:
-                moves = ['B']
-                self.hide([self.cur_pos], moves)
             
             return moves
         else:
@@ -309,7 +320,7 @@ class AI_Agent():
             else:
                 self.enemy_past_pos[enemy['id']] = [enemy['pos']] 
 
-        self.logger.info("Past enemies positions: %s" % (self.enemy_past_pos))
+        # self.logger.info("Past enemies positions: %s" % (self.enemy_past_pos))
         #Workaround to compare previous and current walls
         new_walls = state['walls']
         if self.walls is not None:
