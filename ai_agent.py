@@ -146,7 +146,15 @@ class AI_Agent():
                           ['a', 'a', 'w'],
                           ['a', 'a', 's'],
                           ['d', 'd', 'w'],
-                          ['d', 'd', 's']
+                          ['d', 'd', 's'],
+                          ['a', 'a', 'a', 'w'],
+                          ['a', 'a', 'a', 's'],
+                          ['w', 'w', 'w', 'a'],
+                          ['w', 'w', 'w', 'd'],
+                          ['s', 's', 's', 'a'],
+                          ['s', 's', 's', 'd'],
+                          ['d', 'd', 'd', 'w'],
+                          ['d', 'd', 'd', 's'],
                           ]
 
         last_pos = path[-1]
@@ -276,6 +284,7 @@ class AI_Agent():
         elif self.exit: # exit is available
             # self.eval_enemy = False
             path, moves = self.calculate_path(self.cur_pos, self.exit)
+            self.search_domain.destroyed_walls = []
             return moves
             
         else:
@@ -346,11 +355,13 @@ class BombermanSearch(SearchDomain):
         self.map = map
         self.logger = logging.getLogger("AI AGENT")
         self.logger.setLevel(logging.DEBUG)
+        self.destroyed_walls = []
 
     #Alterar para isto
     def set_destroyed_wall(self, destroyed_wall):
         print(f"Detroyed Wall: {destroyed_wall}")
-        self.map.remove_wall(destroyed_wall)
+        #self.map.remove_wall(destroyed_wall)
+        self.destroyed_walls.append(destroyed_wall)
 
     # lista de accoes possiveis num estado
     def actions(self, state):
@@ -361,7 +372,7 @@ class BombermanSearch(SearchDomain):
         for move in moves:
             next_pos = self.result(pos, move)
             if ((not self.map.is_blocked(next_pos) and 
-                    not self.map.is_stone(next_pos))):
+                    not self.map.is_stone(next_pos)) or next_pos in self.destroyed_walls):
                 actions_list.append(move) 
 
         return actions_list
