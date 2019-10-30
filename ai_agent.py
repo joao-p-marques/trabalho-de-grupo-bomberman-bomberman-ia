@@ -265,8 +265,10 @@ class AI_Agent():
             # else:
             #     path, moves = self.calculate_path(self.cur_pos, closest_enemy['pos'])
             #     mov = moves[0]
-
-            path, moves = self.calculate_path(self.cur_pos, closest_enemy['pos'])
+            if [1,1] in self.enemy_past_pos[closest_enemy['id']]:
+                path, moves = self.calculate_path(self.cur_pos, [1,1])
+            else:
+                path, moves = self.calculate_path(self.cur_pos, closest_enemy['pos'])
             # mov = moves[0]
 
             # Tornar esta condiçao caso o inimigos esta a correr nanossa direçao?
@@ -278,10 +280,8 @@ class AI_Agent():
             if self.dist(self.cur_pos, closest_enemy['pos']) <= 2:
                 moves = ['B']
                 self.hide([self.cur_pos], moves)
-                return moves
-            else:
-                return [moves[0]]
-
+            
+            return moves
         else:
             # self.eval_enemy = False
             path, moves = self.select_bomb_point(closest_wall) 
