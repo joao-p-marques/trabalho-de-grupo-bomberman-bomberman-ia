@@ -19,14 +19,13 @@ class AI_Agent():
         self.map = Map(size=game_properties["size"], mapa=game_properties["map"])
         self.logger.info(self.map)
 
-        self.reverse_plays = {"a":"d","w":"s","s":"w","d":"a"}
-
         self.cur_pos = None
         self.walls = None
         self.enemies = None
         self.powerups = None
         self.bonus = None
         self.exit = None
+        self.lives = 3 #this shouldnt be hardcoded
 
         # self.TTT = None
 
@@ -144,24 +143,47 @@ class AI_Agent():
                     possible_move[1:])
         
     def decide_move(self):
+
+
         if self.powerups: # powerup to pick up
             powerup = self.powerups.pop(0)[0] # 0 - pos, 1 - type
             self.logger.info("Going for powerup: " + str(powerup))
             path, moves = self.calculate_path(self.cur_pos, powerup)
             return moves
-        elif False: #if len(self.enemies)>0:
+        elif len(self.enemies)>0:
             # go for enemy
             #Os inimigos movem por isso temos que voltar a calcular isto enquanto estamos no  ciclo
-            closest_enemy = self.closest_enemy()
+            """closest_enemy = self.closest_enemy()
             self.logger.info("Going for enemy: " + str(closest_enemy))
-            return self.calculate_path(self.cur_pos, self.closest_enemy()['pos'])
+            path, moves = self.calculate_path(self.cur_pos, self.closest_enemy()['pos'])
+            moves.append('B')
+            self.hide(path, moves)"""
+            moves=[]
+            path = [self.cur_pos]
+
+            closest_enemy = self.closest_enemy()
+            if self.dist(self.cur_pos, closest_enemy['pos']) <= 1 :
+                moves.append('B')
+                self.hide(path, moves)
+                return moves
+
+            allpath, allmoves = self.calculate_path(self.cur_pos, self.closest_enemy()['pos'])
+            moves.append(allmoves[0])
+            return moves
+
+        elif self.exit != []:
+            moves=[]
+            self.calculate_path(self.cur_pos, self.exit)
+            moves.append(allmoves[0])
+            return moves
+            
         else:
             closest_wall = self.closest_wall()
             path, moves = self.select_bomb_point(closest_wall) 
             moves.append('B') # leave a bomb at the end
             self.hide(path, moves)
             self.search_domain.set_destroyed_wall(closest_wall)
-            return moves
+            return moves        
 
     def next_move(self, state):
         # self.logger.info(state)
@@ -173,6 +195,13 @@ class AI_Agent():
         self.bonus = state['bonus']
         self.exit = state['exit']
 
+        lost_life = self.lives != state['lives']
+        self.lives = state['lives']
+        #Clear after death
+        if lost_life:
+            self.logger.info("I Died, will restart decisionQueue")
+            self.decisions_queue = []
+        
         # if self.TTT is None:
         #     self.TTT = self.walls[0]
         # self.logger.debug("TTTTTTT " + str(self.search_domain.map.is_blocked(self.TTT)) + ", " + 
