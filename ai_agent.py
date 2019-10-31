@@ -27,9 +27,10 @@ class AI_Agent():
         self.exit = None
         self.have_powerup = None
         self.waiting = 0
+        self.level = None
         self.lives = 3 #this shouldnt be hardcoded
 
-        self.enemy_past_pos = {}
+        # self.enemy_past_pos = {}
         self.pursuing_enemy = None
         # self.eval_enemy = None
 
@@ -64,6 +65,14 @@ class AI_Agent():
         self.cur_pos = [1,1]
         self.decisions_queue = []
         self.waiting = 0
+
+    def reset_level(self):
+        self.cur_pos = [1,1]
+        self.decisions_queue = []
+        self.waiting = 0
+        self.have_powerup = False
+        self.pursuing_enemy = None
+        self.search_domain.remove_destroyed_walls()
 
     def closest_enemy(self):
         closest = None
@@ -351,18 +360,18 @@ class AI_Agent():
         self.exit = state['exit']
         #self.walls = state['walls']
 
-        #Keep track of enemies past positions to check for loops
-        for enemy in self.enemies:
-            if enemy['id'] in self.enemy_past_pos:
-                old_pos = self.enemy_past_pos[enemy['id']]
-                new_pos = enemy['pos']
-                old_pos.append(new_pos)
-                self.enemy_past_pos[enemy['id']] = old_pos
-            else:
-                self.enemy_past_pos[enemy['id']] = [enemy['pos']] 
+        ##Keep track of enemies past positions to check for loops
+        #for enemy in self.enemies:
+        #    if enemy['id'] in self.enemy_past_pos:
+        #        old_pos = self.enemy_past_pos[enemy['id']]
+        #        new_pos = enemy['pos']
+        #        old_pos.append(new_pos)
+        #        self.enemy_past_pos[enemy['id']] = old_pos
+            # else:
+            #     self.enemy_past_pos[enemy['id']] = [enemy['pos']] 
 
         # self.logger.info("Past enemies positions: %s" % (self.enemy_past_pos))
-        #Workaround to compare previous and current walls
+        # Workaround to compare previous and current walls
         new_walls = state['walls']
         if self.walls is not None:
             for wall in [w for w in self.walls if w not in new_walls]:
@@ -375,6 +384,12 @@ class AI_Agent():
         #Clear after death
         if lost_life:
             self.reset_life()
+
+        level = state['level']
+        if self.level is None:
+            self.level = level
+        if self.level != level:
+            self.reset_level()
 
         # if queue is empty and there are no bombs placed
         if (not self.decisions_queue) and not state['bombs']: 
@@ -400,9 +415,12 @@ class BombermanSearch(SearchDomain):
 
     #Alterar para isto
     def set_destroyed_wall(self, destroyed_wall):
-        print(f"Detroyed Wall: {destroyed_wall}")
+        # print(f"Detroyed Wall: {destroyed_wall}")
         #self.map.remove_wall(destroyed_wall)
         self.destroyed_walls.append(destroyed_wall)
+
+    def remove_destroyed_walls(self):
+        self.destroyed_walls = []
 
     # lista de accoes possiveis num estado
     def actions(self, state):
