@@ -47,7 +47,7 @@ class AI_Agent():
             d = self.dist(self.cur_pos, enemy['pos'])
             if closest is None or d < closest[1]:
                 closest = (enemy, d)
-        return closest[0] 
+        return closest[0] if closest != None else None
     
     #Importante para nao perder tempo a procura de paredes
     def closest_wall(self):
@@ -56,7 +56,7 @@ class AI_Agent():
             d = self.dist(self.cur_pos, wall)
             if closest is None or d < closest[1]:
                 closest = (wall, d)
-        return closest[0] 
+        return closest[0] if closest != None else None
 
     def calculate_path(self, origin, goal):
         problem = SearchProblem(self.search_domain, origin, goal)
@@ -68,6 +68,9 @@ class AI_Agent():
         return (path, moves)
 
     def find_direction(self, prev_pos, pos):
+        #change this
+        if prev_pos is None:
+            return ''
         if prev_pos[0] < pos[0]: 
             return 'd'
         elif prev_pos[0] > pos[0]:
@@ -89,11 +92,12 @@ class AI_Agent():
 
     def running_away(self, move):
         # self.logger.debug(str(self.pursuing_enemy))
-        if (self.find_direction(self.pursuing_enemy['last_pos'], self.pursuing_enemy['pos']) == move 
+        if self.pursuing_enemy:
+            if (self.find_direction(self.pursuing_enemy['last_pos'], self.pursuing_enemy['pos']) == move 
                 and ((self.cur_pos[0] == self.pursuing_enemy['pos']) 
                     or (self.cur_pos[1] == self.pursuing_enemy['pos']))):
-            self.logger.info("Enemy running away from me.")
-            return True
+                self.logger.info("Enemy running away from me.")
+                return True
         return False
 
     def running_towards(self, move):
@@ -248,8 +252,8 @@ class AI_Agent():
         #     path, moves = self.calculate_path(self.cur_pos, [1,1])
         #     return moves
 
-        if (not self.walls 
-            or self.dist(self.cur_pos,closest_enemy['pos']) < self.dist(self.cur_pos, closest_wall)
+        if (closest_enemy != None and closest_wall != None) and (not self.walls 
+            or self.dist(self.cur_pos,closest_enemy['pos']) <= self.dist(self.cur_pos, closest_wall)
             or (self.have_powerup and self.exit)
            ):
             # started pursuing different enemy
@@ -295,13 +299,57 @@ class AI_Agent():
             #         return moves
             
             return moves
-        else:
+        elif closest_wall != None:
             # self.eval_enemy = False
             path, moves = self.select_bomb_point(closest_wall) 
             moves.append('B') # leave a bomb at the end
             self.hide(path, moves)
             return moves 
+        elif closest_enemy != None:
+            # started pursuing different enemy
+            if (self.pursuing_enemy is None or 
+                    self.pursuing_enemy['id'] != closest_enemy['id']): 
+                self.pursuing_enemy = closest_enemy
+                self.pursuing_enemy['last_pos'] = None
+            else:
+                last_pos = self.pursuing_enemy['pos'] # keep track of enemy movement
+                self.pursuing_enemy = closest_enemy
+                self.pursuing_enemy['last_pos'] = last_pos
+
+            # if self.decisions_queue:
+            #     self.loggger.debug("Already have queue")
+            #     moves = self.decisions_queue
+            #     path = self.result(moves)
+            # else:
+            #     path, moves = self.calculate_path(self.cur_pos, closest_enemy['pos'])
+            #     mov = moves[0]
+
+            # if [1,1] in self.enemy_past_pos[closest_enemy['id']]:
+            #     path, moves = self.calculate_path(self.cur_pos, [1,1])
+            # else:
+            if True:
+                path, moves = self.calculate_path(self.cur_pos, closest_enemy['pos'])
+                if (self.search_domain.dist(self.cur_pos, closest_enemy['pos']) <= 2
+                    and not self.running_away(moves[-1])):
+                    moves = ['B']
+                    self.hide([self.cur_pos], moves)
+                elif self.dist(self.cur_pos, closest_enemy['pos']) <= 1:
+                    moves = ['B']
+                    self.hide([self.cur_pos], moves)
+                else:
+                    return [moves[0]]
+
+            # mov = moves[0]
+
+            # Tornar esta condiçao caso o inimigos esta a correr nanossa direçao?
+            # if self.dist(self.cur_pos, closest_enemy['pos']) <= 2:
+            #     if self.running_towards(moves[0]):
+            #         moves = ['B']
+            #         self.hide([self.cur_pos], moves)
+            #         return moves
             
+            return moves
+
     def next_move(self, state):
         # self.logger.info(state)
 
@@ -336,6 +384,7 @@ class AI_Agent():
         #Clear after death
         if lost_life:
             self.logger.info("I Died, will restart decisionQueue")
+            self.cur_pos = [1,1]
             self.decisions_queue = []
 
         # if queue is empty and there are no bombs placed
