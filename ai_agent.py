@@ -68,6 +68,8 @@ class AI_Agent():
         return (path, moves)
 
     def find_direction(self, prev_pos, pos):
+        if prev_pos == None:
+            return 'null'
         if prev_pos[0] < pos[0]: 
             return 'd'
         elif prev_pos[0] > pos[0]:
@@ -90,8 +92,8 @@ class AI_Agent():
     def running_away(self, move):
         # self.logger.debug(str(self.pursuing_enemy))
         if (self.find_direction(self.pursuing_enemy['last_pos'], self.pursuing_enemy['pos']) == move 
-                and ((self.cur_pos[0] == self.pursuing_enemy['pos']) 
-                    or (self.cur_pos[1] == self.pursuing_enemy['pos']))):
+                and (self.cur_pos[0] == self.pursuing_enemy['pos'][0]) 
+                    or (self.cur_pos[1] == self.pursuing_enemy['pos'][1])):
             self.logger.info("Enemy running away from me.")
             return True
         return False
@@ -281,7 +283,8 @@ class AI_Agent():
                     and not self.running_away(moves[-1])):
                     moves = ['B']
                     self.hide([self.cur_pos], moves)
-                elif self.dist(self.cur_pos, closest_enemy['pos']) <= 1:
+                elif self.search_domain.dist(self.cur_pos, closest_enemy['pos']) <= 1:
+
                     moves = ['B']
                     self.hide([self.cur_pos], moves)
                 else:
