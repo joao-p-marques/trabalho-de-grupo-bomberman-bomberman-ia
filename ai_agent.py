@@ -26,7 +26,7 @@ class AI_Agent():
         self.bonus = None
         self.exit = None
         self.have_powerup = None
-        self.waiting = False
+        self.waiting = 0
         self.lives = 3 #this shouldnt be hardcoded
 
         self.enemy_past_pos = {}
@@ -53,13 +53,17 @@ class AI_Agent():
             rounds_pursuing = self.pursuing_enemy['rounds_pursuing']
             self.pursuing_enemy = closest_enemy
             self.pursuing_enemy['last_pos'] = last_pos
-            self.pursuing_enemy['rounds_pursuing'] = rounds_pursuing + 1
+            self.pursuing_enemy['rounds_pursuing'] = rounds_pursuing 
+
+    def incr_round(self):
+        rounds_pursuing = self.pursuing_enemy['rounds_pursuing']
+        self.pursuing_enemy['rounds_pursuing'] = rounds_pursuing + 1
 
     def reset_life(self):
         self.logger.info("I Died, will restart decisionQueue")
         self.cur_pos = [1,1]
         self.decisions_queue = []
-        self.waiting = False
+        self.waiting = 0
 
     def closest_enemy(self):
         closest = None
@@ -100,6 +104,16 @@ class AI_Agent():
         elif prev_pos[1] > pos[1]:
             return 's'
 
+    def dir_in_x(self, d):
+        if d in ['a', 'd']:
+            return True
+        return False
+
+    def dir_in_y(self, d):
+        if d in ['w', 's']:
+            return True
+        return False
+
     def opposite_move(self, move):
         if move == 'w':
             return 's'
@@ -112,9 +126,12 @@ class AI_Agent():
 
     def running_away(self, move):
         # self.logger.debug(str(self.pursuing_enemy))
-        if (self.find_direction(self.pursuing_enemy['last_pos'], self.pursuing_enemy['pos']) == move 
-                and (self.cur_pos[0] == self.pursuing_enemy['pos'][0]) 
-                    or (self.cur_pos[1] == self.pursuing_enemy['pos'][1])):
+        enemy_dir = self.find_direction(self.pursuing_enemy['last_pos'], self.pursuing_enemy['pos'])
+
+        cond1 = self.dir_in_x(enemy_dir) and (self.cur_pos[1] == self.pursuing_enemy['pos'][1])
+        cond2 = self.dir_in_y(enemy_dir) and (self.cur_pos[0] == self.pursuing_enemy['pos'][0])
+
+        if enemy_dir == move and (cond1 or cond2):
             self.logger.info("Enemy running away from me.")
             return True
         return False
@@ -289,21 +306,30 @@ class AI_Agent():
                 #     else:
                 #         self.logger.debug("Wait here")
                 #         return [''] # keep waiting
-                # elif self.pursuing_enemy['rounds_pursuing'] >= 20:
-                #     self.logger.debug("Pursuing the same enemy for 3 rounds, go for him")
-                #     path, moves = self.calculate_path(self.cur_pos, closest_enemy['pos'][::-1])
-                #     # reverse position list to go to expected pos in a few moves
-                #     self.waiting = True
-                #     # wait there
-                #     return moves
                 if (self.search_domain.dist(self.cur_pos, closest_enemy['pos']) <= 2
                     and not self.running_away(moves[-1])):
                     moves = ['B']
+                    self.incr_round()
                     self.hide([self.cur_pos], moves)
+                    self.waiting = 0
                 elif self.search_domain.dist(self.cur_pos, closest_enemy['pos']) <= 1:
                     moves = ['B']
+                    self.incr_round()
                     self.hide([self.cur_pos], moves)
+                    self.waiting = 0
+                elif self.pursuing_enemy['rounds_pursuing'] >= 10 and self.waiting < 10:
+                    self.logger.debug("Pursuing the same enemy for 15 rounds, stop for a moment")
+
+                    self.waiting += 1
+
+                    # path, moves = self.calculate_path(self.cur_pos, closest_enemy['pos'][::-1])
+                    # # reverse position list to go to expected pos in a few moves
+                    # self.waiting = True
+                    # # wait there
+
+                    return ['']
                 else:
+                    self.waiting = 0
                     return [moves[0]]
 
             return moves
