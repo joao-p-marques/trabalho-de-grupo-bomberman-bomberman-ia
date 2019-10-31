@@ -238,10 +238,8 @@ class AI_Agent():
             return moves
         
         #Does this solve?
-        if len(self.enemies)>0:
-            closest_enemy = self.closest_enemy()
-        if len(self.walls)>0:
-            closest_wall = self.closest_wall()
+        closest_enemy = self.closest_enemy()
+        closest_wall = self.closest_wall()
 
 
         #Wait for the enemies
