@@ -222,6 +222,8 @@ class AI_Agent():
     def decide_move(self):
         if self.powerups: # powerup to pick up
             powerup = self.powerups.pop(0)[0] # 0 - pos, 1 - type
+            if self.cur_pos == powerup:
+                self.have_powerup = True
             self.logger.info("Going for powerup: " + str(powerup))
             path, moves = self.calculate_path(self.cur_pos, powerup)
             if len(self.enemies)>0:
@@ -248,8 +250,9 @@ class AI_Agent():
         #     path, moves = self.calculate_path(self.cur_pos, [1,1])
         #     return moves
 
-        if (self.dist(self.cur_pos,closest_enemy['pos']) < self.dist(self.cur_pos, closest_wall)
-           or (self.have_powerup and self.exit)
+        if (not self.walls 
+            or self.dist(self.cur_pos,closest_enemy['pos']) < self.dist(self.cur_pos, closest_wall)
+            or (self.have_powerup and self.exit)
            ):
             # started pursuing different enemy
             if (self.pursuing_enemy is None or 
@@ -269,12 +272,13 @@ class AI_Agent():
             #     path, moves = self.calculate_path(self.cur_pos, closest_enemy['pos'])
             #     mov = moves[0]
 
-            if [1,1] in self.enemy_past_pos[closest_enemy['id']]:
-                path, moves = self.calculate_path(self.cur_pos, [1,1])
-            else:
+            # if [1,1] in self.enemy_past_pos[closest_enemy['id']]:
+            #     path, moves = self.calculate_path(self.cur_pos, [1,1])
+            # else:
+            if True:
                 path, moves = self.calculate_path(self.cur_pos, closest_enemy['pos'])
-                if (self.dist(self.cur_pos, closest_enemy['pos']) <= 2
-                    and self.running_towards(moves[0])):
+                if (self.search_domain.dist(self.cur_pos, closest_enemy['pos']) <= 2
+                    and not self.running_away(moves[-1])):
                     moves = ['B']
                     self.hide([self.cur_pos], moves)
                 elif self.dist(self.cur_pos, closest_enemy['pos']) <= 1:
