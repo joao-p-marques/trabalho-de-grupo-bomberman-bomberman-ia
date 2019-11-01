@@ -225,11 +225,14 @@ class AI_Agent():
         best = None
         for possible_move in possible_moves:
 
-            path = self.result(possible_move)
-            if len(self.enemies) > 0 and self.closest_enemy(last_pos)['pos'] in path:
-                continue
-
             p = [last_pos]
+
+            hide_path = self.result(possible_move)
+            if len(self.enemies) > 0:
+                for e in self.enemies:
+                    if e['pos'] in hide_path:
+                        continue
+
             this_works = True
             
             #print(last_pos,possible_move)
@@ -480,8 +483,8 @@ class BombermanSearch(SearchDomain):
 
     # custo de uma accao num estado
     def cost(self, state, action, enemy=False):
-        if enemy:
-            return 20
+        # if enemy:
+        #     return 20
         return 1
 
     def dist(self, pos1, pos2):
