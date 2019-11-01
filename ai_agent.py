@@ -346,6 +346,8 @@ class AI_Agent():
                 else:
                     return [moves[0]]
 
+            if self.level == 3 and self.have_powerup:
+                moves.append('A')
             return moves
 
         elif closest_wall != None:
