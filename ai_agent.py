@@ -7,7 +7,14 @@ import random
 from mapa import Map
 from tree_search import *
 
-logging.basicConfig(level=logging.DEBUG, format="%(asctime)s - %(name)s - %(levelname)s - %(message)s")
+file_handler = logging.FileHandler(filename='ai_agent.log')
+stdout_handler = logging.StreamHandler(sys.stdout)
+handlers = [file_handler, stdout_handler]
+logging.basicConfig(
+	level=logging.DEBUG, 
+	format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
+	handlers=handlers
+)
 
 class AI_Agent():
 
