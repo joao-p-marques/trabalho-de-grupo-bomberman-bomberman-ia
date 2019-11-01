@@ -240,7 +240,8 @@ class AI_Agent():
                 
                 best = (p, possible_move)
                 break
-        
+        #aqui verificar se best == None e se for talvez andar para tras conforme o radius da bomab?
+
         self.logger.info("Hiding from bomb in " + str(best[0][-1]) + " (" + str(best[1]) + ")")
 
         path += best[0]
