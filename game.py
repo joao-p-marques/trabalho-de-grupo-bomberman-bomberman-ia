@@ -16,7 +16,7 @@ logger.setLevel(logging.DEBUG)
 LIVES = 3
 INITIAL_SCORE = 0
 TIMEOUT = 3000
-GAME_SPEED = 10 
+GAME_SPEED = 30
 MIN_BOMB_RADIUS = 3
 MAP_SIZE = (51, 31)
 
@@ -131,6 +131,8 @@ class Game:
         self._running = False
         self._timeout = timeout
         self._score = 0
+        self._step = 0
+        self._total_steps = 0
         self._state = {}
         self._initial_lives = lives
         self.map = Map(size=size, empty=True)
@@ -154,17 +156,26 @@ class Game:
     def score(self):
         return self._score
 
+    @property
+    def total_steps(self):
+        return self._total_steps
+
     def start(self, player_name):
         logger.debug("Reset world")
         self._player_name = player_name
         self._running = True
+        self._total_steps = 0
         self._score = INITIAL_SCORE
         self._bomberman = Bomberman(self.map.bomberman_spawn, self._initial_lives)
+        for powerup in range(1, self.initial_level):
+            self._bomberman.powerup(LEVEL_POWERUPS[powerup])
+        logger.debug("Bomberman Powerups: %s", self._bomberman.powers)
 
         self.next_level(self.initial_level)
 
     def stop(self):
         logger.info("GAME OVER")
+        self._total_steps += self._step
         self._running = False
 
     def next_level(self, level):
@@ -176,6 +187,7 @@ class Game:
         logger.info("NEXT LEVEL")
         self.map = Map(level=level, size=self.map.size, enemies=len(LEVEL_ENEMIES[level]))
         self._bomberman.respawn()
+        self._total_steps += self._step
         self._step = 0
         self._bombs = []
         self._powerups = []
@@ -185,7 +197,8 @@ class Game:
         self._enemies = [
             t(p) for t, p in zip(LEVEL_ENEMIES[level], self.map.enemies_spawn)
         ]
-        logger.debug(self._enemies)
+        logger.debug("Enemies: %s", [(e._name, e.pos) for e in self._enemies])
+        logger.debug("Walls: %s", self.map.walls)
 
     def quit(self):
         logger.debug("Quit")
@@ -244,6 +257,7 @@ class Game:
         if self._bomberman.lives > 0:
             logger.debug("RESPAWN")
             self._bomberman.respawn()
+            self._bombs = []
         else:
             self.stop()
 
@@ -278,7 +292,8 @@ class Game:
                         self._score += enemy.points()
                         self._enemies.remove(enemy)
 
-                self._bombs.remove(bomb)
+                if bomb in self._bombs:
+                    self._bombs.remove(bomb)
 
     async def next_frame(self):
         await asyncio.sleep(1.0 / GAME_SPEED)
@@ -306,6 +321,9 @@ class Game:
             for enemy in self._enemies:
                 enemy.move(self.map, self._bomberman, self._bombs, self._enemies)
             self.collision()
+
+        #sanity check
+        assert all([ep not in self.map.walls for ep in [e.pos for e in self._enemies if not e._wallpass]])
 
         self._state = {
             "level": self.map.level,
