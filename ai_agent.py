@@ -352,7 +352,7 @@ class AI_Agent():
             moves.append('B') # leave a bomb at the end
             self.hide(path, moves)
 
-        if self.level == 3 and self.have_powerup:
+        if (self.level == 3 and self.have_powerup or self.level > 3):
             moves.append('A')
         return moves
 
