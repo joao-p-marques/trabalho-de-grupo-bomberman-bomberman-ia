@@ -327,8 +327,8 @@ class AI_Agent():
                     self.hide([self.cur_pos], moves)
                     self.waiting = 0
                 elif self.pursuing_enemy['rounds_pursuing'] >= 10:
-                    if (len(self.enemies) == 1 and self.waiting > 150
-                        or self.waiting > 20):
+                    if (self.waiting > 150
+                        or (len(self.enemies) > 1 and self.waiting > 20)):
                         self.pursuing_enemy['rounds_pursuing'] = 0
                         self.waiting = 0
                         return [moves[0]]
