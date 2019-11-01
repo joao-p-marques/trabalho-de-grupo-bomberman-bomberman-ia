@@ -226,12 +226,16 @@ class AI_Agent():
         for possible_move in possible_moves:
 
             p = [last_pos]
+            this_works = True
 
             hide_path = self.result(possible_move)
             if len(self.enemies) > 0:
                 for e in self.enemies:
                     if e['pos'] in hide_path:
-                        continue
+                        this_works = False
+
+            if not this_works:
+                continue
 
             this_works = True
             
