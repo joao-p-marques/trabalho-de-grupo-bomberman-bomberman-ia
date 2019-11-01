@@ -346,16 +346,15 @@ class AI_Agent():
                 else:
                     return [moves[0]]
 
-            if self.level == 3 and self.have_powerup:
-                moves.append('A')
-            return moves
-
         elif closest_wall != None:
             # self.eval_enemy = False
             path, moves = self.select_bomb_point(closest_wall) 
             moves.append('B') # leave a bomb at the end
             self.hide(path, moves)
-            return moves 
+
+        if self.level == 3 and self.have_powerup:
+            moves.append('A')
+        return moves
 
     def next_move(self, state):
         # self.logger.info(state)
