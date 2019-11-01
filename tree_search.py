@@ -137,19 +137,16 @@ class SearchTree:
             node_actions = self.problem.domain.actions(node.state)
             for a in node_actions:
                 newstate = self.problem.domain.result(node.state,a)
-                if (not node.in_parent(newstate)):
-                    if node.depth < depth_limit:
-                        lnewnodes += [SearchNode(newstate,
-                                                node, 
-                                                node.depth+1, 
-                                                node.cum_cost + self.problem.domain.cost(node.state, a),
-                                                self.problem.domain.heuristic(
-                                                    newstate, 
-                                                    self.problem.goal),
-                                                a
-                                                )]
-                    else:
-                        return None
+                if (not node.in_parent(newstate)) and node.depth < depth_limit:
+                    lnewnodes += [SearchNode(newstate,
+                                             node, 
+                                             node.depth+1, 
+                                             node.cum_cost + self.problem.domain.cost(node.state, a),
+                                             self.problem.domain.heuristic(
+                                                 newstate, 
+                                                 self.problem.goal),
+                                             a
+                                            )]
             self.add_to_open(lnewnodes)
         return None
 

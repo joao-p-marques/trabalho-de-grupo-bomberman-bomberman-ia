@@ -308,43 +308,59 @@ class AI_Agent():
             and (
                 not self.walls 
                 or self.dist(self.cur_pos,closest_enemy['pos']) <= self.dist(self.cur_pos, closest_wall)
-                or (self.have_powerup and self.exit)
+                #or (self.have_powerup and self.exit)
                 )
            ):
 
             self.update_pursuing_enemy(closest_enemy)
 
-            path, moves = self.calculate_path(self.cur_pos, closest_enemy['pos'])
-            if (self.search_domain.dist(self.cur_pos, closest_enemy['pos']) <= 2
-                and not self.running_away(moves[-1])):
-                moves = ['B']
-                self.incr_round()
-                self.hide([self.cur_pos], moves)
-                self.waiting = 0
-            elif self.search_domain.dist(self.cur_pos, closest_enemy['pos']) <= 1:
-                moves = ['B']
-                self.incr_round()
-                self.hide([self.cur_pos], moves)
-                self.waiting = 0
-            elif self.pursuing_enemy['rounds_pursuing'] >= 10:
-                if (self.waiting > 150
-                    or (len(self.enemies) > 1 and self.waiting > 20)):
-                    self.pursuing_enemy['rounds_pursuing'] = 0
-                    self.waiting = 0
-                    return [moves[0]]
+            #se distancia for maior que o metade do tamanho do mapa, vamos para uma posiçao no meio e tentamos procurar a partir de la
+            if False:
+            #melhorar esta porcaria xd
+            #if self.search_domain.dist(self.cur_pos, closest_enemy['pos']) >= self.map._size[1]/2:
+                chosen_pos = [int(self.map._size[0]/2),int(self.map._size[1]/2)]
+                self.logger.info("Going for %s" %  (chosen_pos))
+                while self.map.is_blocked(chosen_pos) or self.map.is_stone(chosen_pos) \
+                    or chosen_pos not in self.search_domain.destroyed_walls or chosen_pos!=[self.map._size[0]-1,self.map._size[1]-1]:
 
-                self.logger.debug("Pursuing the same enemy for 10 rounds, stop for a moment")
+                    chosen_pos = [ele + 1 for ele in chosen_pos]  
+                    self.logger.info("Going for %s" %  (chosen_pos))
+                path, moves = self.calculate_path(self.cur_pos, chosen_pos)
+                return moves
 
-                self.waiting += 1
-
-                # path, moves = self.calculate_path(self.cur_pos, closest_enemy['pos'][::-1])
-                # # reverse position list to go to expected pos in a few moves
-                # self.waiting = True
-                # # wait there
-
-                return ['']
             else:
-                return [moves[0]]
+                path, moves = self.calculate_path(self.cur_pos, closest_enemy['pos'])
+                if (self.search_domain.dist(self.cur_pos, closest_enemy['pos']) <= 2
+                    and not self.running_away(moves[-1])):
+                    moves = ['B']
+                    self.incr_round()
+                    self.hide([self.cur_pos], moves)
+                    self.waiting = 0
+                elif self.search_domain.dist(self.cur_pos, closest_enemy['pos']) <= 1:
+                    moves = ['B']
+                    self.incr_round()
+                    self.hide([self.cur_pos], moves)
+                    self.waiting = 0
+                elif self.pursuing_enemy['rounds_pursuing'] >= 3:
+                    if (self.waiting > 80
+                        or (len(self.enemies) > 1 and self.waiting > 35)):
+                        self.pursuing_enemy['rounds_pursuing'] = 0
+                        self.waiting = 0
+                        return [moves[0]]
+
+                    self.logger.debug("Pursuing the same enemy for 10 rounds, stop for a moment")
+
+                    self.waiting += 1
+
+                    # path, moves = self.calculate_path(self.cur_pos, closest_enemy['pos'][::-1])
+                    # # reverse position list to go to expected pos in a few moves
+                    # self.waiting = True
+                    # # wait there
+
+                    return ['']
+
+                else:
+                    return [moves[0]]
 
         elif closest_wall != None:
             # self.eval_enemy = False
