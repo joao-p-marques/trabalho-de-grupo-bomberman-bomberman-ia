@@ -67,6 +67,7 @@ class AI_Agent():
         self.waiting = 0
 
     def reset_level(self):
+        self.logger.info("NEW LEVEL")
         self.cur_pos = [1,1]
         self.decisions_queue = []
         self.waiting = 0
@@ -108,9 +109,9 @@ class AI_Agent():
             return 'd'
         elif prev_pos[0] > pos[0]:
             return 'a'
-        elif prev_pos[1] < pos[1]:
-            return 'w'
         elif prev_pos[1] > pos[1]:
+            return 'w'
+        elif prev_pos[1] < pos[1]:
             return 's'
 
     def dir_in_x(self, d):
@@ -281,7 +282,7 @@ class AI_Agent():
 
         if self.exit and not self.enemies:
             path, moves = self.calculate_path(self.cur_pos, self.exit)
-            self.search_domain.destroyed_walls = []
+            self.reset_level()
             return moves
         
         #Does this solve?
@@ -298,23 +299,8 @@ class AI_Agent():
 
             self.update_pursuing_enemy(closest_enemy)
 
-            # if self.pursuing_enemy['rounds_pursuing'] > 50:
-            #     self.waiting = False
-
-            # if [1,1] in self.enemy_past_pos[closest_enemy['id']]:
-            #     path, moves = self.calculate_path(self.cur_pos, [1,1])
-            # else:
             if True:
                 path, moves = self.calculate_path(self.cur_pos, closest_enemy['pos'])
-                # if self.waiting:
-                #     if self.search_domain.dist(self.cur_pos, closest_enemy['pos']) <= 1:
-                #         self.logger.debug("He is here. Kill")
-                #         moves = ['B']
-                #         self.hide([self.cur_pos], moves)
-                #         self.waiting = False
-                #     else:
-                #         self.logger.debug("Wait here")
-                #         return [''] # keep waiting
                 if (self.search_domain.dist(self.cur_pos, closest_enemy['pos']) <= 2
                     and not self.running_away(moves[-1])):
                     moves = ['B']
@@ -326,7 +312,7 @@ class AI_Agent():
                     self.incr_round()
                     self.hide([self.cur_pos], moves)
                     self.waiting = 0
-                elif self.pursuing_enemy['rounds_pursuing'] >= 10 and self.waiting < 10:
+                elif self.pursuing_enemy['rounds_pursuing'] >= 10 and self.waiting < 15:
                     self.logger.debug("Pursuing the same enemy for 15 rounds, stop for a moment")
 
                     self.waiting += 1
@@ -339,6 +325,7 @@ class AI_Agent():
                     return ['']
                 else:
                     self.waiting = 0
+                    self.pursuing_enemy['rounds_pursuing'] = 0
                     return [moves[0]]
 
             return moves
@@ -385,11 +372,11 @@ class AI_Agent():
         if lost_life:
             self.reset_life()
 
-        level = state['level']
-        if self.level is None:
-            self.level = level
-        if self.level != level:
-            self.reset_level()
+        # level = state['level']
+        # if self.level is None:
+        #     self.level = level
+        # if self.level != level:
+        #     self.reset_level()
 
         # if queue is empty and there are no bombs placed
         if (not self.decisions_queue) and not state['bombs']: 
