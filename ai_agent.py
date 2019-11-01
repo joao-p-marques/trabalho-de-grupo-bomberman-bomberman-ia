@@ -8,7 +8,7 @@ import random
 from mapa import Map
 from tree_search import *
 
-file_handler = logging.FileHandler(filename='ai_agent.log')
+file_handler = logging.FileHandler(filename='ai_agent.log',mode='w+')
 stdout_handler = logging.StreamHandler(sys.stdout)
 handlers = [file_handler, stdout_handler]
 logging.basicConfig(
@@ -42,7 +42,7 @@ class AI_Agent():
         self.pursuing_enemy = None
         # self.eval_enemy = None
 
-        self.depth_limit = 100
+        self.depth_limit = 30
         self.loop = 0
         self.search_domain = BombermanSearch(self.map)
 
@@ -315,7 +315,15 @@ class AI_Agent():
             self.update_pursuing_enemy(closest_enemy)
 
             if True:
-                path, moves = self.calculate_path(self.cur_pos, closest_enemy['pos'])
+                ret = self.calculate_path(self.cur_pos, closest_enemy['pos'])
+                path, moves = ret
+
+                if ret == None and closest_wall != None:
+                    # self.eval_enemy = False
+                    path, moves = self.select_bomb_point(closest_wall) 
+                    moves.append('B') # leave a bomb at the end
+                    self.hide(path, moves)
+
                 if (self.search_domain.dist(self.cur_pos, closest_enemy['pos']) <= 2
                     and not self.running_away(moves[-1])):
                     moves = ['B']
