@@ -180,6 +180,8 @@ class AI_Agent():
         closest = None
         for pos in [self.search_domain.result(target, mov) 
                 for mov in self.search_domain.actions(target)]:
+            if pos in self.walls:
+                continue
             d = self.dist(self.cur_pos, pos)
             if closest is None or d < closest[1]:
                 closest = (pos, d)
@@ -302,7 +304,7 @@ class AI_Agent():
                 return [moves[0]]
             return moves
 
-        if self.exit and not self.enemies:
+        if self.exit and not self.enemies and self.have_powerup:
             path, moves = self.calculate_path(self.cur_pos, self.exit)
             self.reset_level()
             return moves
@@ -313,10 +315,11 @@ class AI_Agent():
 
         if (closest_enemy is not None 
             and (
-                not self.walls 
+                not self.walls
                 or self.dist(self.cur_pos,closest_enemy['pos']) <= self.dist(self.cur_pos, closest_wall)
                 #or (self.have_powerup and self.exit)
                 )
+            and not closest_enemy['pos'] in self.walls
            ):
 
             self.update_pursuing_enemy(closest_enemy)
