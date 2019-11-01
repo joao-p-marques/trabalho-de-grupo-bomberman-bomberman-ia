@@ -83,10 +83,16 @@ class AI_Agent():
         self.pursuing_enemy = None
         self.search_domain.remove_destroyed_walls()
 
-    def closest_enemy(self):
+    def reset_map_walls(self):
+        self.logger.debug("Updating walls because NEXT LEVEL")
+        self.search_domain.set_walls(self.walls)
+
+    def closest_enemy(self, pos=None):
+        if pos is None:
+            pos = self.cur_pos
         closest = None
         for enemy in self.enemies:
-            d = self.dist(self.cur_pos, enemy['pos'])
+            d = self.dist(pos, enemy['pos'])
             if closest is None or d < closest[1]:
                 closest = (enemy, d)
         return closest[0] if closest != None else None
@@ -220,7 +226,7 @@ class AI_Agent():
         for possible_move in possible_moves:
 
             path = self.result(possible_move)
-            if len(self.enemies) > 0 and self.closest_enemy()['pos'] in path:
+            if len(self.enemies) > 0 and self.closest_enemy(last_pos)['pos'] in path:
                 continue
 
             p = [last_pos]
@@ -320,8 +326,14 @@ class AI_Agent():
                     self.incr_round()
                     self.hide([self.cur_pos], moves)
                     self.waiting = 0
-                elif self.pursuing_enemy['rounds_pursuing'] >= 10 and self.waiting < 15:
-                    self.logger.debug("Pursuing the same enemy for 15 rounds, stop for a moment")
+                elif self.pursuing_enemy['rounds_pursuing'] >= 10:
+                    if (len(self.enemies) == 1 and self.waiting > 50
+                        or self.waiting > 20):
+                        self.pursuing_enemy['rounds_pursuing'] = 0
+                        self.waiting = 0
+                        return [moves[0]]
+
+                    self.logger.debug("Pursuing the same enemy for 10 rounds, stop for a moment")
 
                     self.waiting += 1
 
@@ -332,8 +344,6 @@ class AI_Agent():
 
                     return ['']
                 else:
-                    self.waiting = 0
-                    self.pursuing_enemy['rounds_pursuing'] = 0
                     return [moves[0]]
 
             return moves
@@ -380,11 +390,12 @@ class AI_Agent():
         if lost_life:
             self.reset_life()
 
-        # level = state['level']
-        # if self.level is None:
-        #     self.level = level
-        # if self.level != level:
-        #     self.reset_level()
+        level = state['level']
+        if self.level is None:
+            self.level = level
+        if self.level != level:
+            self.reset_map_walls()
+        self.level = level
 
         # if queue is empty and there are no bombs placed
         if (not self.decisions_queue) and not state['bombs']: 
@@ -416,6 +427,9 @@ class BombermanSearch(SearchDomain):
 
     def remove_destroyed_walls(self):
         self.destroyed_walls = []
+
+    def set_walls(self, walls):
+        self.map.walls = walls
 
     # lista de accoes possiveis num estado
     def actions(self, state):
