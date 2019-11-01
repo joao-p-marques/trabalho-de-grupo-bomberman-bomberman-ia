@@ -187,7 +187,7 @@ class AI_Agent():
         self.logger.info("Closest wall: " + str(target) + 
                 ". Going to " + str(closest[0]))
         
-        self.bombpos = closest[0]
+        self.bomb_point = closest[0]
 
         path, moves = self.calculate_path(self.cur_pos, closest[0])
         return (path, moves)
@@ -313,44 +313,46 @@ class AI_Agent():
 
             self.update_pursuing_enemy(closest_enemy)
 
-            if True:
-                path, moves = self.calculate_path(self.cur_pos, closest_enemy['pos'])
-                if (self.search_domain.dist(self.cur_pos, closest_enemy['pos']) <= 2
-                    and not self.running_away(moves[-1])):
-                    moves = ['B']
-                    self.incr_round()
-                    self.hide([self.cur_pos], moves)
+            path, moves = self.calculate_path(self.cur_pos, closest_enemy['pos'])
+            if (self.search_domain.dist(self.cur_pos, closest_enemy['pos']) <= 2
+                and not self.running_away(moves[-1])):
+                moves = ['B']
+                self.incr_round()
+                self.hide([self.cur_pos], moves)
+                self.waiting = 0
+            elif self.search_domain.dist(self.cur_pos, closest_enemy['pos']) <= 1:
+                moves = ['B']
+                self.incr_round()
+                self.hide([self.cur_pos], moves)
+                self.waiting = 0
+            elif self.pursuing_enemy['rounds_pursuing'] >= 10:
+                if (self.waiting > 150
+                    or (len(self.enemies) > 1 and self.waiting > 20)):
+                    self.pursuing_enemy['rounds_pursuing'] = 0
                     self.waiting = 0
-                elif self.search_domain.dist(self.cur_pos, closest_enemy['pos']) <= 1:
-                    moves = ['B']
-                    self.incr_round()
-                    self.hide([self.cur_pos], moves)
-                    self.waiting = 0
-                elif self.pursuing_enemy['rounds_pursuing'] >= 10:
-                    if (self.waiting > 150
-                        or (len(self.enemies) > 1 and self.waiting > 20)):
-                        self.pursuing_enemy['rounds_pursuing'] = 0
-                        self.waiting = 0
-                        return [moves[0]]
-
-                    self.logger.debug("Pursuing the same enemy for 10 rounds, stop for a moment")
-
-                    self.waiting += 1
-
-                    # path, moves = self.calculate_path(self.cur_pos, closest_enemy['pos'][::-1])
-                    # # reverse position list to go to expected pos in a few moves
-                    # self.waiting = True
-                    # # wait there
-
-                    return ['']
-                else:
                     return [moves[0]]
+
+                self.logger.debug("Pursuing the same enemy for 10 rounds, stop for a moment")
+
+                self.waiting += 1
+
+                # path, moves = self.calculate_path(self.cur_pos, closest_enemy['pos'][::-1])
+                # # reverse position list to go to expected pos in a few moves
+                # self.waiting = True
+                # # wait there
+
+                return ['']
+            else:
+                return [moves[0]]
 
         elif closest_wall != None:
             # self.eval_enemy = False
             path, moves = self.select_bomb_point(closest_wall) 
-            moves.append('B') # leave a bomb at the end
-            self.hide(path, moves)
+            if not self.enemies or self.search_domain.dist(self.cur_pos, closest_wall) <= 1:
+                moves.append('B') # leave a bomb at the end
+                self.hide(path, moves)
+            else:
+                return [moves[0]]
 
         if (self.level == 3 and self.have_powerup or self.level > 3):
             moves.append('A')
@@ -399,7 +401,7 @@ class AI_Agent():
         self.level = level
 
         # if queue is empty and there are no bombs placed
-        if (not self.decisions_queue) and not state['bombs']: 
+        if ((not self.decisions_queue) and not state['bombs']):
             self.decisions_queue = self.decide_move()
 
         if not self.decisions_queue:
