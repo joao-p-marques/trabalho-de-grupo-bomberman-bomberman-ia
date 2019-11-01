@@ -356,11 +356,14 @@ class AI_Agent():
                         self.pursuing_enemy['rounds_pursuing'] = 0
                         self.waiting = 0
                         return [moves[0]]
+                    elif (self.waiting > 70 and self.level>6):
+                        self.pursuing_enemy['rounds_pursuing'] = 0
+                        self.waiting = 0
+                        return [moves[0]]
                     elif (self.waiting > 150):
                         self.pursuing_enemy['rounds_pursuing'] = 0
                         self.waiting = 0
                         return [moves[0]]
-
                     self.logger.debug("Pursuing the same enemy for 10 rounds, stop for a moment")
 
                     self.waiting += 1
