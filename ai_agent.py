@@ -10,7 +10,8 @@ from tree_search import *
 
 file_handler = logging.FileHandler(filename='ai_agent.log',mode='w+')
 stdout_handler = logging.StreamHandler(sys.stdout)
-handlers = [file_handler, stdout_handler]
+# handlers = [file_handler, stdout_handler]
+handlers = [stdout_handler]
 logging.basicConfig(
 	level=logging.DEBUG, 
 	format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
@@ -98,13 +99,19 @@ class AI_Agent():
         return closest[0] if closest != None else None
     
     #Importante para nao perder tempo a procura de paredes
-    def closest_wall(self):
-        closest = None
+    def closest_wall(self, not_the_first=False):
+        closest_list = []
+        if not self.walls:
+            return None
         for wall in self.walls:
             d = self.dist(self.cur_pos, wall)
-            if closest is None or d < closest[1]:
-                closest = (wall, d)
-        return closest[0] if closest != None else None
+            closest_list.append((wall, d))
+            # if closest is None or d < closest[1]:
+            #     closest = (wall, d)
+        closest_list = sorted(closest_list, key=lambda x:x[1])
+        if not_the_first:
+            return closest_list[1][0]
+        return closest_list[0][0]
 
     def calculate_path(self, origin, goal):
         problem = SearchProblem(self.search_domain, origin, goal)
@@ -185,6 +192,11 @@ class AI_Agent():
             d = self.dist(self.cur_pos, pos)
             if closest is None or d < closest[1]:
                 closest = (pos, d)
+
+        if closest is None: # did not find place to put bomb
+            self.logger.debug(f'Current wall {target} is blocked')
+            target = self.closest_wall(not_the_first=True)
+            return select_bomb_point(target)
 
         self.logger.info("Closest wall: " + str(target) + 
                 ". Going to " + str(closest[0]))
