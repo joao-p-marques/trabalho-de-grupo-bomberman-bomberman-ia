@@ -11,12 +11,12 @@ from consts import Powerups
 from mapa import Map, Tiles
 
 logger = logging.getLogger("Game")
-logger.setLevel(logging.DEBUG)
+logger.setLevel(logging.WARN)
 
 LIVES = 3
 INITIAL_SCORE = 0
 TIMEOUT = 3000
-GAME_SPEED = 30
+GAME_SPEED = 50
 MIN_BOMB_RADIUS = 3
 MAP_SIZE = (51, 31)
 
