@@ -50,7 +50,7 @@ class AI_Agent():
         self.decisions_queue = []
 
         self.rounds_pursuing_limit = 3 # Limit of rounds we can be pursuing the same enemy
-        self.wait_time = 150 # time to wait when in loop pursuing enemy
+        self.wait_time = 200 # time to wait when in loop pursuing enemy
 
         self.last_enemy_dir = None
 
