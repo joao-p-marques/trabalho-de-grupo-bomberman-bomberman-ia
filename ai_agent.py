@@ -13,7 +13,7 @@ stdout_handler = logging.StreamHandler(sys.stdout)
 # handlers = [file_handler, stdout_handler]
 handlers = [stdout_handler]
 logging.basicConfig(
-	level=logging.INFO, 
+	level=logging.WARN, 
 	format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
 	handlers=handlers
 )
@@ -22,7 +22,7 @@ class AI_Agent():
 
     def __init__(self, game_properties):
         self.logger = logging.getLogger("AI AGENT")
-        self.logger.setLevel(logging.INFO)
+        self.logger.setLevel(logging.WARN)
         self.logger.info("AI Agent created.")
 
         self.map = Map(size=game_properties["size"], mapa=game_properties["map"])
@@ -464,7 +464,7 @@ class BombermanSearch(SearchDomain):
     def __init__(self, map, destroyed_walls=[]):
         self.map = map
         self.logger = logging.getLogger("AI AGENT")
-        self.logger.setLevel(logging.DEBUG)
+        self.logger.setLevel(logging.WARN)
         self.destroyed_walls = []
 
     #Alterar para isto

@@ -11,13 +11,13 @@ from collections import namedtuple
 from game import Game
 
 logging.basicConfig(
-    level=logging.DEBUG, format="%(asctime)s - %(name)s - %(levelname)s - %(message)s"
+    level=logging.WARN, format="%(asctime)s - %(name)s - %(levelname)s - %(message)s"
 )
 wslogger = logging.getLogger("websockets")
 wslogger.setLevel(logging.WARN)
 
 logger = logging.getLogger("Server")
-logger.setLevel(logging.INFO)
+logger.setLevel(logging.WARN)
 
 Player = namedtuple("Player", ["name", "ws"])
 
