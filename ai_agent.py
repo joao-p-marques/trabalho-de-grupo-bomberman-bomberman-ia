@@ -194,7 +194,7 @@ class AI_Agent():
         if closest is None: # did not find place to put bomb
             self.logger.debug(f'Current wall {target} is blocked')
             target = self.closest_wall(i=i+1)
-            return select_bomb_point(target, i+1)
+            return self.select_bomb_point(target, i+1)
 
         self.logger.info("Closest wall: " + str(target) + 
                 ". Going to " + str(closest[0]))
