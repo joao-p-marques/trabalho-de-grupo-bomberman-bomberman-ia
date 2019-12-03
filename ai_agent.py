@@ -50,7 +50,7 @@ class AI_Agent():
         self.decisions_queue = []
 
         self.rounds_pursuing_limit = 3 # Limit of rounds we can be pursuing the same enemy
-        self.wait_time = 100 # time to wait when in loop pursuing enemy
+        self.wait_time = 150 # time to wait when in loop pursuing enemy
 
         self.last_enemy_dir = None
 
@@ -76,7 +76,7 @@ class AI_Agent():
         self.pursuing_enemy['rounds_pursuing'] = rounds_pursuing + 1
 
     def reset_life(self):
-        self.logger.info("I Died, will restart decisionQueue")
+        self.logger.info("I Died, will restart decisionQueue------------------------------------------")
         self.cur_pos = [1,1]
         self.decisions_queue = []
         self.waiting = 0
@@ -231,7 +231,7 @@ class AI_Agent():
     def hide(self, path, moves):
         # hide in nearby position 
         # but choose the one closest to next wall ? not yet
-        possible_moves = [['w', 'a'], 
+        '''possible_moves = [['w', 'a'], 
                           ['w', 'd'], 
                           ['s', 'a'],
                           ['s', 'd'],
@@ -255,11 +255,68 @@ class AI_Agent():
                           ['s', 's', 's', 'd'],
                           ['d', 'd', 'd', 'w'],
                           ['d', 'd', 'd', 's'],
-                          ]
+                          ]'''
+        quad1 = [['w', 'd'],['d', 'w'],['w', 'w', 'd'],['d', 'd', 'w'],['w', 'w', 'w', 'd'],['d', 'd', 'd', 'w']]
+        quad2 = [['w', 'a'],['a', 'w'],['w', 'w', 'a'],['a', 'a', 'w'],['a', 'a', 'a', 'w'],['w', 'w', 'w', 'a']]
+        quad3 = [['s', 'a'],['a', 's'],['s', 's', 'a'],['a', 'a', 's'],['a', 'a', 'a', 's'],['s', 's', 's', 'a']]
+        quad4 = [['s', 'd'],['d', 's'],['s', 's', 'd'],['d', 'd', 's'],['s', 's', 's', 'd'],['d', 'd', 'd', 's']]
+
 
         last_pos = path[-1]
         #Instead of none, we have a possibility to stay in place if there is no exit
         best = last_pos,['']
+
+
+        quad1n = 0
+        quad2n = 0
+        quad3n = 0
+        quad4n = 0
+
+        for e in self.enemies:
+            epos = e['pos']
+            if self.search_domain.dist(last_pos, epos) < 8: #only the closests
+                
+                if last_pos[0] > epos[0]:   #esquerda
+                    if last_pos[1] < epos[1]:    #baixo
+                        quad3n += 2
+                    if last_pos[1] > epos[1]:    #cima
+                        quad2n += 2
+                    else:
+                        quad2n += 1
+                        quad3n += 1
+
+                if last_pos[0] < epos[0]:    #direita
+                    if last_pos[1] < epos[1]:    #baixo
+                        quad4n += 2
+                    if last_pos[1] > epos[1]:    #cima
+                        quad1n += 2
+                    else:
+                        quad1n += 1
+                        quad4n += 1
+        
+        possible_moves = []
+
+        if quad1n != 0 and quad2n==0 and quad3n==0 and quad4n==0:
+            possible_moves += quad3 + quad4 + quad2 + quad1
+        if quad1n == 0 and quad2n!=0 and quad3n==0 and quad4n==0:
+            possible_moves += quad4 + quad1 + quad3 + quad2
+        if quad1n == 0 and quad2n==0 and quad3n!=0 and quad4n==0:
+            possible_moves += quad1 + quad2 + quad4 + quad3
+        if quad1n == 0 and quad2n==0 and quad3n==0 and quad4n!=0:
+            possible_moves += quad2 + quad3 + quad1 + quad4
+        else:
+            helper = {'quad1':quad1n,'quad2':quad2n,'quad3':quad3n,'quad4':quad4n}
+            for i in sorted(helper.items(), key= lambda e : (e[1], e[0])):
+                if i[0] == 'quad1':
+                    possible_moves += quad1
+                elif i[0] == 'quad2':
+                    possible_moves += quad2
+                elif i[0] == 'quad3':
+                    possible_moves += quad3
+                elif i[0] == 'quad4':
+                    possible_moves += quad4
+
+
         for possible_move in possible_moves:
 
             p = [last_pos]
@@ -409,7 +466,6 @@ class AI_Agent():
                     enemy_direction = self.find_direction(self.pursuing_enemy['last_pos'], self.pursuing_enemy['pos'])
                     if enemy_direction is None:
                         enemy_direction = self.last_enemy_dir
-                    print('dir---------------------------' + str(enemy_direction))
                     if enemy_direction == 'w':
                         self.last_enemy_dir = 'w'
                         if not self.map.is_stone((self.cur_pos[0]-1, self.cur_pos[1])):
