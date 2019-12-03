@@ -99,7 +99,7 @@ class AI_Agent():
         return closest[0] if closest != None else None
     
     #Importante para nao perder tempo a procura de paredes
-    def closest_wall(self, not_the_first=False):
+    def closest_wall(self, i=0):
         closest_list = []
         if not self.walls:
             return None
@@ -109,9 +109,7 @@ class AI_Agent():
             # if closest is None or d < closest[1]:
             #     closest = (wall, d)
         closest_list = sorted(closest_list, key=lambda x:x[1])
-        if not_the_first:
-            return closest_list[1][0]
-        return closest_list[0][0]
+        return closest_list[i][0]
 
     def calculate_path(self, origin, goal):
         problem = SearchProblem(self.search_domain, origin, goal)
@@ -183,7 +181,7 @@ class AI_Agent():
             return True
         return False
 
-    def select_bomb_point(self, target):
+    def select_bomb_point(self, target, i=0):
         closest = None
         for pos in [self.search_domain.result(target, mov) 
                 for mov in self.search_domain.actions(target)]:
@@ -195,8 +193,8 @@ class AI_Agent():
 
         if closest is None: # did not find place to put bomb
             self.logger.debug(f'Current wall {target} is blocked')
-            target = self.closest_wall(not_the_first=True)
-            return select_bomb_point(target)
+            target = self.closest_wall(i=i+1)
+            return select_bomb_point(target, i+1)
 
         self.logger.info("Closest wall: " + str(target) + 
                 ". Going to " + str(closest[0]))
