@@ -55,6 +55,7 @@ class AI_Agent():
         self.last_enemy_dir = None
 
 
+
     def dist(self, pos1, pos2):
         return math.hypot(pos2[0]-pos1[0],pos2[1]-pos1[1])
 
@@ -385,6 +386,12 @@ class AI_Agent():
             return result
         else:
             return None
+    
+    def allBalloms(self):
+        for e in self.enemies:
+            if e['name'] != 'Balloom':
+                return False
+        return True
         
     def decide_move(self):
         if self.powerups: # powerup to pick up
@@ -467,38 +474,55 @@ class AI_Agent():
                     enemy_direction = self.find_direction(self.pursuing_enemy['last_pos'], self.pursuing_enemy['pos'])
                     if enemy_direction is None:
                         enemy_direction = self.last_enemy_dir
-                    if enemy_direction == 'w' and (self.last_enemy_dir == 'w' or self.last_enemy_dir is None):
+                    if enemy_direction == 'w':
                         self.last_enemy_dir = 'w'
                         if not self.map.is_stone((self.cur_pos[0]-1, self.cur_pos[1])):
                             return ['a']
+                        elif not self.map.is_stone((self.cur_pos[0], self.cur_pos[1]-1)):
+                            self.pursuing_enemy['rounds_pursuing'] = 0
+                            self.waiting = 0
+                            return [moves[0]]
                         else:
                             return ['w']
 
-                    elif enemy_direction == 'a' and (self.last_enemy_dir == 'a' or self.last_enemy_dir is None):
+                    elif enemy_direction == 'a':
                         self.last_enemy_dir = 'a'
                         if not self.map.is_stone((self.cur_pos[0], self.cur_pos[1]+1)):
                             return ['s']
+                        elif not self.map.is_stone((self.cur_pos[0]-1, self.cur_pos[1])):
+                            self.pursuing_enemy['rounds_pursuing'] = 0
+                            self.waiting = 0
+                            return [moves[0]]
                         else:
                             return ['a']
 
-                    elif enemy_direction == 's' and (self.last_enemy_dir == 's' or self.last_enemy_dir is None):
+                    elif enemy_direction == 's':
                         self.last_enemy_dir = 's'
                         if not self.map.is_stone((self.cur_pos[0]+1, self.cur_pos[1])):
                             return ['d']
+                        elif not self.map.is_stone((self.cur_pos[0], self.cur_pos[1]+1)):
+                            self.pursuing_enemy['rounds_pursuing'] = 0
+                            self.waiting = 0
+                            return [moves[0]]
                         else:
                             return ['s']
 
-                    elif enemy_direction == 'd' and (self.last_enemy_dir == 'd' or self.last_enemy_dir is None):
+                    elif enemy_direction == 'd':
                         self.last_enemy_dir = 'd'
                         if not self.map.is_stone((self.cur_pos[0], self.cur_pos[1]-1)):
                             return ['w']
+                        elif not self.map.is_stone((self.cur_pos[0]+1, self.cur_pos[1])):
+                            self.pursuing_enemy['rounds_pursuing'] = 0
+                            self.waiting = 0
+                            return [moves[0]]
                         else:
                             return ['d']
-                    
-                    else: #stop this
-                        self.pursuing_enemy['rounds_pursuing'] = 0
-                        self.waiting = 0
-                        return [moves[0]]
+                
+                elif self.walls == [] and self.allBalloms():
+                    if self.cur_pos == [1,1]:
+                        return ''
+                    path, moves = self.calculate_path(self.cur_pos, [1,1])
+                    return [moves[0]]
 
                 else:
                     return [moves[0]]
