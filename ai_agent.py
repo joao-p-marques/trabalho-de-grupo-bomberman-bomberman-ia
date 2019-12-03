@@ -49,6 +49,9 @@ class AI_Agent():
 
         self.decisions_queue = []
 
+        self.rounds_pursuing_limit = 3 # Limit of rounds we can be pursuing the same enemy
+        self.wait_time = 100 # time to wait when in loop pursuing enemy
+
     def dist(self, pos1, pos2):
         return math.hypot(pos2[0]-pos1[0],pos2[1]-pos1[1])
 
@@ -58,6 +61,7 @@ class AI_Agent():
             self.pursuing_enemy = closest_enemy
             self.pursuing_enemy['last_pos'] = None
             self.pursuing_enemy['rounds_pursuing'] = 0
+            self.reset_waiting_limit()
         else:
             last_pos = self.pursuing_enemy['pos'] # keep track of enemy movement
             rounds_pursuing = self.pursuing_enemy['rounds_pursuing']
@@ -83,6 +87,22 @@ class AI_Agent():
         self.have_powerup = False
         self.pursuing_enemy = None
         self.search_domain.remove_destroyed_walls()
+
+    def reset_waiting_limit(self):
+        if self.level > 2:
+            self.rounds_pursuing_limit = 4 # Limit of rounds we can be pursuing the same enemy
+            self.wait_time = 70 # time to wait when in loop pursuing enemy
+        elif self.level > 6:
+            self.wait_time = 50
+            self.rounds_pursuing = 5
+
+    def update_level(self, level):
+        if self.level is None:
+            self.level = level
+        if self.level != level:
+            self.reset_level()
+            self.reset_map_walls()
+        self.level = level
 
     def reset_map_walls(self):
         self.logger.debug("Updating walls because NEXT LEVEL")
@@ -194,7 +214,7 @@ class AI_Agent():
         if closest is None: # did not find place to put bomb
             self.logger.debug(f'Current wall {target} is blocked')
             target = self.closest_wall(i=i+1)
-            return select_bomb_point(target, i+1)
+            return self.select_bomb_point(target, i+1)
 
         self.logger.debug("Closest wall: " + str(target) + 
                 ". Going to " + str(closest[0]))
@@ -322,7 +342,6 @@ class AI_Agent():
 
         if self.exit and not self.enemies and self.have_powerup:
             path, moves = self.calculate_path(self.cur_pos, self.exit)
-            self.reset_level()
             return moves
         
         #Does this solve?
@@ -367,18 +386,11 @@ class AI_Agent():
                     self.incr_round()
                     self.hide([self.cur_pos], moves)
                     self.waiting = 0
-                elif self.pursuing_enemy['rounds_pursuing'] >= 3:
-                    if (self.waiting > 100 and self.level>2):
+                elif self.pursuing_enemy['rounds_pursuing'] >= self.rounds_pursuing_limit:
+                    if (self.waiting > self.wait_time):
                         self.pursuing_enemy['rounds_pursuing'] = 0
                         self.waiting = 0
-                        return [moves[0]]
-                    elif (self.waiting > 70 and self.level>6):
-                        self.pursuing_enemy['rounds_pursuing'] = 0
-                        self.waiting = 0
-                        return [moves[0]]
-                    elif (self.waiting > 170):
-                        self.pursuing_enemy['rounds_pursuing'] = 0
-                        self.waiting = 0
+                        self.wait_time += 10
                         return [moves[0]]
                     self.logger.debug("Pursuing the same enemy for 10 rounds, stop for a moment")
 
@@ -441,11 +453,7 @@ class AI_Agent():
             self.reset_life()
 
         level = state['level']
-        if self.level is None:
-            self.level = level
-        if self.level != level:
-            self.reset_map_walls()
-        self.level = level
+        self.update_level(level)
 
         # if queue is empty and there are no bombs placed
         if ((not self.decisions_queue) and not state['bombs']):
