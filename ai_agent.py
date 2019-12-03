@@ -52,6 +52,8 @@ class AI_Agent():
         self.rounds_pursuing_limit = 3 # Limit of rounds we can be pursuing the same enemy
         self.wait_time = 100 # time to wait when in loop pursuing enemy
 
+        self.last_enemy_dir = None
+
     def dist(self, pos1, pos2):
         return math.hypot(pos2[0]-pos1[0],pos2[1]-pos1[1])
 
@@ -223,6 +225,8 @@ class AI_Agent():
 
         path, moves = self.calculate_path(self.cur_pos, closest[0])
         return (path, moves)
+    
+    
 
     def hide(self, path, moves):
         # hide in nearby position 
@@ -390,7 +394,6 @@ class AI_Agent():
                     if (self.waiting > self.wait_time):
                         self.pursuing_enemy['rounds_pursuing'] = 0
                         self.waiting = 0
-                        self.wait_time += 10
                         return [moves[0]]
                     self.logger.debug("Pursuing the same enemy for 10 rounds, stop for a moment")
 
@@ -401,7 +404,40 @@ class AI_Agent():
                     # self.waiting = True
                     # # wait there
 
-                    return ['']
+                    #return ['']
+   
+                    enemy_direction = self.find_direction(self.pursuing_enemy['last_pos'], self.pursuing_enemy['pos'])
+                    if enemy_direction is None:
+                        enemy_direction = self.last_enemy_dir
+                    print('dir---------------------------' + str(enemy_direction))
+                    if enemy_direction == 'w':
+                        self.last_enemy_dir = 'w'
+                        if not self.map.is_stone((self.cur_pos[0]-1, self.cur_pos[1])):
+                            return ['a']
+                        else:
+                            return ['w']
+
+                    elif enemy_direction == 'a':
+                        self.last_enemy_dir = 'a'
+                        if not self.map.is_stone((self.cur_pos[0], self.cur_pos[1]+1)):
+                            return ['s']
+                        else:
+                            return ['a']
+
+                    elif enemy_direction == 's':
+                        self.last_enemy_dir = 's'
+                        if not self.map.is_stone((self.cur_pos[0]+1, self.cur_pos[1])):
+                            return ['d']
+                        else:
+                            return ['s']
+
+                    elif enemy_direction == 'd':
+                        self.last_enemy_dir = 'd'
+                        if not self.map.is_stone((self.cur_pos[0], self.cur_pos[1]-1)):
+                            return ['w']
+                        else:
+                            return ['d']
+
 
                 else:
                     return [moves[0]]
