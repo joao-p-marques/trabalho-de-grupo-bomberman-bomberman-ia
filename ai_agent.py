@@ -458,7 +458,8 @@ class AI_Agent():
                     self.incr_round()
                     self.hide([self.cur_pos], moves)
                     self.waiting = 0
-                elif self.pursuing_enemy['rounds_pursuing'] >= self.rounds_pursuing_limit:
+                elif ((self.pursuing_enemy['name'] == 'Balloom' or self.pursuing_enemy['name'] == 'Doll') 
+                    and self.pursuing_enemy['rounds_pursuing'] >= self.rounds_pursuing_limit):
                     '''
                     if (self.waiting > self.wait_time):
                         self.pursuing_enemy['rounds_pursuing'] = 0
@@ -474,7 +475,6 @@ class AI_Agent():
                     # # wait there
 
                     #return ['']
-                    print("AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA")
                     enemy_direction = self.find_direction(self.pursuing_enemy['last_pos'], self.pursuing_enemy['pos'])
                     if enemy_direction is None:
                         enemy_direction = self.last_enemy_dir
