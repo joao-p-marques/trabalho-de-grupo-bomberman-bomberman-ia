@@ -444,7 +444,7 @@ class AI_Agent():
 
             else:
                 path, moves = self.calculate_path(self.cur_pos, closest_enemy['pos'])
-                if (self.search_domain.dist(self.cur_pos, closest_enemy['pos']) <= 2
+                if (len(moves) > 0 and self.search_domain.dist(self.cur_pos, closest_enemy['pos']) <= 2
                     and not self.running_away(moves[-1])):
 
                     if self.walls == [] and self.allBalloms():
