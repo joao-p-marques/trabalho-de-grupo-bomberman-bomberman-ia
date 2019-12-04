@@ -79,12 +79,12 @@ class AI_Agent():
 
     def reset_life(self):
         self.logger.info("I Died, will restart decisionQueue------------------------------------------")
-        self.cur_pos = [1,1]
+        #self.cur_pos = [1,1]
         self.decisions_queue = []
 
     def reset_level(self):
         self.logger.info("NEW LEVEL")
-        self.cur_pos = [1,1]
+        #self.cur_pos = [1,1]
         self.decisions_queue = []
         self.have_powerup = False
         self.pursuing_enemy = None
