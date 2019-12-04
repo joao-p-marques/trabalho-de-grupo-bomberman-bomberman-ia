@@ -36,7 +36,6 @@ class AI_Agent():
         self.bonus = None
         self.exit = None
         self.have_powerup = None
-        self.waiting = 0
         self.level = None
         self.lives = 3 #this shouldnt be hardcoded
 
@@ -54,7 +53,7 @@ class AI_Agent():
         self.wait_time = 200 # time to wait when in loop pursuing enemy
 
         self.last_enemy_dir = None
-
+        self.perform_last_resort = False
 
 
     def dist(self, pos1, pos2):
@@ -82,13 +81,11 @@ class AI_Agent():
         self.logger.info("I Died, will restart decisionQueue------------------------------------------")
         self.cur_pos = [1,1]
         self.decisions_queue = []
-        self.waiting = 0
 
     def reset_level(self):
         self.logger.info("NEW LEVEL")
         self.cur_pos = [1,1]
         self.decisions_queue = []
-        self.waiting = 0
         self.have_powerup = False
         self.pursuing_enemy = None
         self.search_domain.remove_destroyed_walls()
@@ -447,34 +444,25 @@ class AI_Agent():
 
             else:
                 path, moves = self.calculate_path(self.cur_pos, closest_enemy['pos'])
-                if (self.search_domain.dist(self.cur_pos, closest_enemy['pos']) <= 2
+                if (len(moves) > 0 and self.search_domain.dist(self.cur_pos, closest_enemy['pos']) <= 2
                     and not self.running_away(moves[-1])):
+
+                    if self.walls == [] and self.allBalloms():
+                        self.perform_last_resort = True
+
                     moves = ['B']
                     self.incr_round()
                     self.hide([self.cur_pos], moves)
-                    self.waiting = 0
                 elif self.search_domain.dist(self.cur_pos, closest_enemy['pos']) <= 1:
+                    if self.walls == [] and self.allBalloms():
+                        self.perform_last_resort = True
+
                     moves = ['B']
                     self.incr_round()
                     self.hide([self.cur_pos], moves)
-                    self.waiting = 0
                 elif ((self.pursuing_enemy['name'] == 'Balloom' or self.pursuing_enemy['name'] == 'Doll') 
                     and self.pursuing_enemy['rounds_pursuing'] >= self.rounds_pursuing_limit):
-                    '''
-                    if (self.waiting > self.wait_time):
-                        self.pursuing_enemy['rounds_pursuing'] = 0
-                        self.waiting = 0
-                        return [moves[0]]
-                    self.logger.debug("Pursuing the same enemy for 10 rounds, stop for a moment")
-
-                    self.waiting += 1'''
-
-                    # path, moves = self.calculate_path(self.cur_pos, closest_enemy['pos'][::-1])
-                    # # reverse position list to go to expected pos in a few moves
-                    # self.waiting = True
-                    # # wait there
-
-                    #return ['']
+       
                     enemy_direction = self.find_direction(self.pursuing_enemy['last_pos'], self.pursuing_enemy['pos'])
                     if enemy_direction is None:
                         enemy_direction = self.last_enemy_dir
@@ -486,7 +474,6 @@ class AI_Agent():
                             return ['w']
                         else:
                             self.pursuing_enemy['rounds_pursuing'] = 0
-                            self.waiting = 0
                             return [moves[0]]
                     elif enemy_direction == 'a':
                         self.last_enemy_dir = 'a'
@@ -496,7 +483,6 @@ class AI_Agent():
                             return ['a']
                         else:
                             self.pursuing_enemy['rounds_pursuing'] = 0
-                            self.waiting = 0
                             return [moves[0]]
 
                     elif enemy_direction == 's':
@@ -507,7 +493,6 @@ class AI_Agent():
                             return ['s']
                         else:
                             self.pursuing_enemy['rounds_pursuing'] = 0
-                            self.waiting = 0
                             return [moves[0]]
 
                     elif enemy_direction == 'd':
@@ -518,10 +503,9 @@ class AI_Agent():
                             return ['d']
                         else:
                             self.pursuing_enemy['rounds_pursuing'] = 0
-                            self.waiting = 0
                             return [moves[0]]
                 
-                elif self.walls == [] and self.allBalloms():
+                elif self.perform_last_resort:
                     pos = [1,1]
                     while self.map.is_blocked(pos) or self.map.is_stone(pos):
                         pos = [x+1 for x in pos] 
@@ -548,6 +532,10 @@ class AI_Agent():
         return moves
 
     def next_move(self, state):
+
+        if self.enemies != None and len(self.enemies) != len(state['enemies']):  #Enemy killed
+            self.perform_last_resort = False
+
         self.cur_pos = state['bomberman']
         self.enemies = state['enemies']
         self.powerups = state['powerups']
