@@ -482,14 +482,20 @@ class AI_Agent():
                             return [moves[0]]
                 
                 elif self.perform_last_resort:
-                    pos = [1,1]
+                    '''pos = [1,1]
                     while self.map.is_blocked(pos) or self.map.is_stone(pos):
                         pos = [x+1 for x in pos] 
                     if self.cur_pos == pos:
                         return ''
                     self.logger.info("Chosen position to camp: %s" % (pos))
                     path, moves = self.calculate_path(self.cur_pos, pos)
-                    return [moves[0]]
+                    return [moves[0]]'''
+                    if not self.map.is_stone((self.cur_pos[0], self.cur_pos[1]-1)):
+                        return ['w']
+                    elif not self.map.is_stone((self.cur_pos[0]-1, self.cur_pos[1])):
+                        return ['a']
+                    else:
+                        return ['']
                 
                 elif self.pursuing_enemy['name'] in ['Oneal','Minvo','Ovapi', 'Kondoria', 'Pass'] and self.pursuing_enemy['rounds_pursuing'] > 10:
                     self.pursuing_enemy['rounds_pursuing'] = 0
