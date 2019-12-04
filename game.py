@@ -11,7 +11,7 @@ from consts import Powerups
 from mapa import Map, Tiles
 
 logger = logging.getLogger("Game")
-logger.setLevel(logging.DEBUG)
+logger.setLevel(logging.WARN)
 
 LIVES = 3
 INITIAL_SCORE = 0

@@ -4,7 +4,7 @@ import random
 from enum import IntEnum
 
 logger = logging.getLogger("Map")
-logger.setLevel(logging.DEBUG)
+logger.setLevel(logging.WARN)
 
 
 class Tiles(IntEnum):
