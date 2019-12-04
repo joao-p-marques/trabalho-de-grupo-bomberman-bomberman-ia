@@ -13,7 +13,7 @@ stdout_handler = logging.StreamHandler(sys.stdout)
 # handlers = [file_handler, stdout_handler]
 handlers = [stdout_handler]
 logging.basicConfig(
-	level=logging.DEBUG, 
+	level=logging.WARN, 
 	format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
 	handlers=handlers
 )
@@ -22,11 +22,11 @@ class AI_Agent():
 
     def __init__(self, game_properties):
         self.logger = logging.getLogger("AI AGENT")
-        self.logger.setLevel(logging.DEBUG)
+        self.logger.setLevel(logging.WARN)
         self.logger.info("AI Agent created.")
 
         self.map = Map(size=game_properties["size"], mapa=game_properties["map"])
-        self.logger.info(self.map)
+        self.logger.debug(self.map)
 
         self.cur_pos = None
         self.walls = None
@@ -138,7 +138,7 @@ class AI_Agent():
     def calculate_path(self, origin, goal):
         problem = SearchProblem(self.search_domain, origin, goal)
         tree = SearchTree(problem, strategy='greedy')
-        self.logger.info("Searching path from " + str(origin) + " to " + str(goal))
+        self.logger.debug("Searching path from " + str(origin) + " to " + str(goal))
         # self.logger.debug(self.walls)
         path, moves = tree.search(depth_limit=self.depth_limit)
         self.logger.debug("Path found.")
@@ -185,7 +185,7 @@ class AI_Agent():
         cond2 = self.dir_in_y(enemy_dir) and (self.cur_pos[0] == self.pursuing_enemy['pos'][0])
 
         if enemy_dir == move and (cond1 or cond2):
-            self.logger.info("Enemy running away from me.")
+            self.logger.debug("Enemy running away from me.")
             return True
         return False
 
@@ -201,7 +201,7 @@ class AI_Agent():
             ) == self.opposite_move(move)
                 and ((self.cur_pos[0] == self.pursuing_enemy['pos'][0]) 
                     or (self.cur_pos[1] == self.pursuing_enemy['pos'][1]))):
-            self.logger.info("Enemy running towards me.")
+            self.logger.debug("Enemy running towards me.")
             return True
         return False
 
@@ -220,7 +220,7 @@ class AI_Agent():
             target = self.closest_wall(i=i+1)
             return self.select_bomb_point(target, i+1)
 
-        self.logger.info("Closest wall: " + str(target) + 
+        self.logger.debug("Closest wall: " + str(target) + 
                 ". Going to " + str(closest[0]))
         
         self.bomb_point = closest[0]
@@ -345,7 +345,7 @@ class AI_Agent():
                 break
         #aqui verificar se best == None e se for talvez andar para tras conforme o radius da bomab?
 
-        self.logger.info("Hiding from bomb in " + str(best[0][-1]) + " (" + str(best[1]) + ")")
+        self.logger.debug("Hiding from bomb in " + str(best[0][-1]) + " (" + str(best[1]) + ")")
 
         path += best[0]
         moves += best[1]
@@ -399,7 +399,7 @@ class AI_Agent():
             powerup = powerup_popped[0]
             powerup_name = powerup_popped[1] # [[15, 16], 'Flames']
             self.have_powerup = True
-            self.logger.info("Going for powerup: " + str(powerup))
+            self.logger.debug("Going for powerup: " + str(powerup))
             path, moves = self.calculate_path(self.cur_pos, powerup)
             if len(self.enemies)>0:
                 self.powerups.append(powerup)
@@ -433,12 +433,12 @@ class AI_Agent():
             #melhorar esta porcaria xd
             #if self.search_domain.dist(self.cur_pos, closest_enemy['pos']) >= self.map._size[1]/2:
                 chosen_pos = [int(self.map._size[0]/2),int(self.map._size[1]/2)]
-                self.logger.info("Going for %s" %  (chosen_pos))
+                self.logger.debug("Going for %s" %  (chosen_pos))
                 while self.map.is_blocked(chosen_pos) or self.map.is_stone(chosen_pos) \
                     or chosen_pos not in self.search_domain.destroyed_walls or chosen_pos!=[self.map._size[0]-1,self.map._size[1]-1]:
 
                     chosen_pos = [ele + 1 for ele in chosen_pos]  
-                    self.logger.info("Going for %s" %  (chosen_pos))
+                    self.logger.debug("Going for %s" %  (chosen_pos))
                 path, moves = self.calculate_path(self.cur_pos, chosen_pos)
                 return moves
 
@@ -583,9 +583,9 @@ class AI_Agent():
         if not self.decisions_queue:
             return ''
 
-        self.logger.info("Path: " + str(self.decisions_queue))
+        self.logger.debug("Path: " + str(self.decisions_queue))
         next_move = self.decisions_queue.pop(0)
-        self.logger.info("Next move: " + str(next_move))
+        self.logger.debug("Next move: " + str(next_move))
 
         return next_move
 
@@ -595,7 +595,7 @@ class BombermanSearch(SearchDomain):
     def __init__(self, map, destroyed_walls=[]):
         self.map = map
         self.logger = logging.getLogger("AI AGENT")
-        self.logger.setLevel(logging.DEBUG)
+        self.logger.setLevel(logging.WARN)
         self.destroyed_walls = []
         self.wallpass = False
 
