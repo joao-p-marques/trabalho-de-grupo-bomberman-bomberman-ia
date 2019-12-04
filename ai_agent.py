@@ -487,7 +487,7 @@ class AI_Agent():
                         pos = [x+1 for x in pos] 
                     if self.cur_pos == pos:
                         return ''
-                    self.logger.info("Chosen position to camp:",pos)
+                    self.logger.info("Chosen position to camp: %s" % (pos))
                     path, moves = self.calculate_path(self.cur_pos, pos)
                     return [moves[0]]
                 
