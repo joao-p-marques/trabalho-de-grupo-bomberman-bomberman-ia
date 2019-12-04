@@ -47,5 +47,5 @@ async def agent_loop(server_address="localhost:8000", agent_name="ai_agent"):
 loop = asyncio.get_event_loop()
 SERVER = os.environ.get("SERVER", "localhost")
 PORT = os.environ.get("PORT", "8000")
-NAME = os.environ.get("NAME", getpass.getuser())
+NAME = os.environ.get("NAME", "Tom1k")
 loop.run_until_complete(agent_loop(f"{SERVER}:{PORT}", NAME))

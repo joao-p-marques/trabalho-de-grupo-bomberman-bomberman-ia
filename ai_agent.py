@@ -506,9 +506,13 @@ class AI_Agent():
                             return [moves[0]]
                 
                 elif self.perform_last_resort:
-                    if self.cur_pos == [1,1]:
+                    pos = [1,1]
+                    while self.map.is_blocked(pos) or self.map.is_stone(pos):
+                        pos = [x+1 for x in pos] 
+                    if self.cur_pos == pos:
                         return ''
-                    path, moves = self.calculate_path(self.cur_pos, [1,1])
+                    self.logger.info("Chosen position to camp:",pos)
+                    path, moves = self.calculate_path(self.cur_pos, pos)
                     return [moves[0]]
 
                 else:
