@@ -455,7 +455,7 @@ class AI_Agent():
                     self.incr_round()
                     self.hide([self.cur_pos], moves)
                     self.waiting = 0
-                elif self.pursuing_enemy['rounds_pursuing'] >= self.rounds_pursuing_limit:
+                elif self.pursuing_enemy['name'] == 'Balloom' and self.pursuing_enemy['rounds_pursuing'] >= self.rounds_pursuing_limit:
                     '''
                     if (self.waiting > self.wait_time):
                         self.pursuing_enemy['rounds_pursuing'] = 0
