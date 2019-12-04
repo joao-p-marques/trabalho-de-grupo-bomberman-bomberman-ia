@@ -363,7 +363,7 @@ class AI_Agent():
     
     def allBalloms(self):
         for e in self.enemies:
-            if e['name'] != 'Balloom':
+            if e['name'] not in ['Balloom', 'Doll']:
                 return False
         return True
         
@@ -494,9 +494,9 @@ class AI_Agent():
                 elif self.pursuing_enemy['name'] in ['Oneal','Minvo','Ovapi', 'Kondoria', 'Pass'] and self.pursuing_enemy['rounds_pursuing'] > 10:
                     self.pursuing_enemy['rounds_pursuing'] = 0
                     if self.cur_pos[0] > self.pursuing_enemy['pos'][0]:
-                        return ['a','a','a','a','a']
+                        return ['a','s','a','s','a']
                     else:
-                        return ['s','s','s','s','s']
+                        return ['d','s','d','s','d']
                 else:
                     return [moves[0]]
 
