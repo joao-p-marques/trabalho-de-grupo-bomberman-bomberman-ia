@@ -231,31 +231,7 @@ class AI_Agent():
     def hide(self, path, moves):
         # hide in nearby position 
         # but choose the one closest to next wall ? not yet
-        '''possible_moves = [['w', 'a'], 
-                          ['w', 'd'], 
-                          ['s', 'a'],
-                          ['s', 'd'],
-                          ['a', 's'],
-                          ['a', 'w'],
-                          ['d', 'w'],
-                          ['d', 's'],
-                          ['w', 'w', 'a'],
-                          ['w', 'w', 'd'],
-                          ['s', 's', 'a'],
-                          ['s', 's', 'd'],
-                          ['a', 'a', 'w'],
-                          ['a', 'a', 's'],
-                          ['d', 'd', 'w'],
-                          ['d', 'd', 's'],
-                          ['a', 'a', 'a', 'w'],
-                          ['a', 'a', 'a', 's'],
-                          ['w', 'w', 'w', 'a'],
-                          ['w', 'w', 'w', 'd'],
-                          ['s', 's', 's', 'a'],
-                          ['s', 's', 's', 'd'],
-                          ['d', 'd', 'd', 'w'],
-                          ['d', 'd', 'd', 's'],
-                          ]'''
+        
         quad1 = [['w', 'd'],['d', 'w'],['w', 'w', 'd'],['d', 'd', 'w'],['w', 'w', 'w', 'd'],['d', 'd', 'd', 'w']]
         quad2 = [['w', 'a'],['a', 'w'],['w', 'w', 'a'],['a', 'a', 'w'],['a', 'a', 'a', 'w'],['w', 'w', 'w', 'a']]
         quad3 = [['s', 'a'],['a', 's'],['s', 's', 'a'],['a', 'a', 's'],['a', 'a', 'a', 's'],['s', 's', 's', 'a']]
@@ -514,7 +490,13 @@ class AI_Agent():
                     self.logger.info("Chosen position to camp:",pos)
                     path, moves = self.calculate_path(self.cur_pos, pos)
                     return [moves[0]]
-
+                
+                elif self.pursuing_enemy['name'] in ['Oneal','Minvo','Ovapi', 'Kondoria', 'Pass'] and self.pursuing_enemy['rounds_pursuing'] > 10:
+                    self.pursuing_enemy['rounds_pursuing'] = 0
+                    if self.cur_pos[0] > self.pursuing_enemy['pos'][0]:
+                        return ['a','a','a','a','a']
+                    else:
+                        return ['s','s','s','s','s']
                 else:
                     return [moves[0]]
 
