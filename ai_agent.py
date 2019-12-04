@@ -558,7 +558,7 @@ class AI_Agent():
             self.decisions_queue = self.decide_move()
 
         if not self.decisions_queue:
-            return ''
+            return ['']
 
         self.logger.debug("Path: " + str(self.decisions_queue))
         next_move = self.decisions_queue.pop(0)
