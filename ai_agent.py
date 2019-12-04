@@ -28,6 +28,7 @@ class AI_Agent():
         self.map = Map(size=game_properties["size"], mapa=game_properties["map"])
         self.logger.info(self.map)
 
+        self.update_wallpass_next = False
         self.cur_pos = None
         self.walls = None
         self.enemies = None
@@ -394,6 +395,9 @@ class AI_Agent():
         return True
         
     def decide_move(self):
+        if self.update_wallpass_next:
+            self.logger.info("I can walk through walls now!")
+            self.search_domain.wallpass = True
         if self.powerups: # powerup to pick up
             powerup_popped = self.powerups.pop(0) # 0 - pos, 1 - type
             powerup = powerup_popped[0]
@@ -404,8 +408,7 @@ class AI_Agent():
             if len(self.enemies)>0:
                 self.powerups.append(powerup)
                 if str(powerup_name)=="Wallpass":
-                    self.logger.info("I can walk through walls now!")
-                    self.search_domain.wallpass = True
+                    self.update_wallpass_next = True
                 return [moves[0]]
             return moves
 
